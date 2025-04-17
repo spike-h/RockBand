@@ -140,6 +140,7 @@ static PT_THREAD(protothread_keypad_scan(struct pt *pt)) {
             prev_key = i;
 
             // DO A THING FOR KEY PRESS
+            printf("Key %d pressed\n", i);
         }
         // Yield for 30ms
         PT_YIELD_usec(30000);
@@ -158,16 +159,97 @@ static PT_THREAD(protothread_keypad_scan(struct pt *pt)) {
 
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
+int trackWidth = SCREEN_WIDTH/3; // total width of the track
+
+struct note {
+    int lane;   // which lane number it is in i.e. || 1 || 2  || 3 ||
+    int y;      // y position of the note
+    int height; // height of the note -- used for sustaning notes
+    int color;  // ye (in form 0-15)
+    // Maybe add start time and 
+};
+
+int numLanes = 3; // number of lanes
+struct note notes[3][50]; // 3 lanes of notes, 50 is the max number of notes in each lane at a single time (arbitary large number)
+int activeNotesInLane[3]; // number of notes in each lane
 
 /**
  * @brief Initializes the VGA display -- draws background.
  */
 void draw_background()
 {
-    // Draw vertical lines on the screen 50 pixels from center
-    int offset = 50;
+    // Draw vertical lines on the screen equally spaced away from the center
+    int offset = trackWidth/2;
+    int singleTrackWidth = trackWidth/numLanes;
     drawVLine(SCREEN_WIDTH/2 + offset, 0, SCREEN_HEIGHT, WHITE);
     drawVLine(SCREEN_WIDTH/2 - offset, 0, SCREEN_HEIGHT, WHITE);
+    // Draws the track lines -- lines in between the two outer lines dictated by numLines
+    for (int i = 1; i < numLanes; i++)
+    {
+        drawVLine(SCREEN_WIDTH/2 - offset + (i * singleTrackWidth), 0, SCREEN_HEIGHT, WHITE);
+    }
+}
+
+/**
+ * @brief Spawns a note in the given lane
+ * @param lane The lane to spawn the note in
+ * @param color The color of the note
+ * @param height The height of the note
+ * @note Assumes that the lane is valid and that there is space in the lane
+ */
+void spawn_note(int lane, int color, int height)
+{
+    // Spawn a note in the given lane
+    if (activeNotesInLane[lane] < 50) // check if there is space in the lane
+    {
+        notes[lane][activeNotesInLane[lane]].lane = lane;
+        notes[lane][activeNotesInLane[lane]].y = SCREEN_HEIGHT - height; // spawn at the top of the screen
+        notes[lane][activeNotesInLane[lane]].height = height;
+        notes[lane][activeNotesInLane[lane]].color = color;
+        activeNotesInLane[lane]++;
+    }
+}
+
+/**
+ * @brief Draws the falling notes
+ */
+void draw_notes()
+{
+    int singleTrackWidth = trackWidth/numLanes;
+    // Draws the falling notes -- lines in between the two outer lines dictated by numLines
+    for (int i = 0; i < numLanes; i++)
+    {
+        for (int j = 0; j < activeNotesInLane[i]; j++)
+        {
+            // Draw the note at its current position
+            drawRect(SCREEN_WIDTH/2 - trackWidth + (i*singleTrackWidth), notes[i][j].y-notes[i][j].height, singleTrackWidth, notes[i][j].height, notes[i][j].color);
+        }
+    }
+}
+
+/**
+ * @brief Updates the falling notes
+ * Currently just moves them down the screen and deletes them once we hit the bottom
+ */
+void update_notes()
+{
+    int gravity = 1; // The speed at which the notes fall -- can be changed to make it harder or easier
+    // Update the falling notes -- move them down the screen
+    for (int i = 0; i < numLanes; i++)
+    {
+        for (int j = activeNotesInLane[i]-1; j >= 0; j--)
+        {
+            // Move the note down the screen
+            notes[i][j].y += gravity;
+            // If the note is off the screen, remove it from the lane
+            if (notes[i][j].y > SCREEN_HEIGHT)
+            {
+                // Remove the note from the lane
+                activeNotesInLane[i]--;
+                notes[i][j] = notes[i][activeNotesInLane[i]]; // Move the last note to the current position
+            }
+        }
+    }
 }
 
 // ========================================
@@ -178,11 +260,26 @@ static PT_THREAD(protothread_animation_loop(struct pt *pt))
     PT_BEGIN(pt);
 
     draw_background();
+    // Spawn notes
+    spawn_note(0, RED, 50);
+    spawn_note(1, GREEN, 50);
+    spawn_note(2, BLUE, 50);
+
+    // // Spawn notes in random lanes
+    // for (int i = 0; i < 50; i++)
+    // {
+    //     int lane = rand() % numLanes; // Random lane
+    //     int color = rand() % 16; // Random color
+    //     int height = rand() % (SCREEN_HEIGHT/2); // Random height
+    //     spawn_note(lane, color, height);
+    // }
 
     while (1)
     {
     draw_background();
-    PT_YIELD_usec(100000);
+    update_notes();
+    draw_notes();
+    PT_YIELD_usec(1000);
     }
 
     PT_END(pt);
