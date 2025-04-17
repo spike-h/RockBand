@@ -35,7 +35,7 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(temu_pebble_band temu_pebble_band.c )
+add_executable(temu_pebble_band)
 
 pico_set_program_name(temu_pebble_band "temu_pebble_band")
 pico_set_program_version(temu_pebble_band "0.1")
@@ -56,6 +56,11 @@ target_include_directories(temu_pebble_band PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
 )
 
+# must match with pio filename and executable name from above
+pico_generate_pio_header(temu_pebble_band ${CMAKE_CURRENT_LIST_DIR}/hsync.pio)
+pico_generate_pio_header(temu_pebble_band ${CMAKE_CURRENT_LIST_DIR}/vsync.pio)
+pico_generate_pio_header(temu_pebble_band ${CMAKE_CURRENT_LIST_DIR}/rgb.pio)
+
 
 # Add any user requested libraries
 # must match with executable name
@@ -70,6 +75,9 @@ target_link_libraries(temu_pebble_band
     hardware_irq 
     hardware_clocks 
     hardware_pll)
+
+# must match with executable name and source file names
+target_sources(temu_pebble_band PRIVATE temu_pebble_band.c vga16_graphics.c)
 
 
 pico_add_extra_outputs(temu_pebble_band)
