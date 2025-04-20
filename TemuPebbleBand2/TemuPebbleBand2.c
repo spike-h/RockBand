@@ -51,6 +51,8 @@
 #include "hardware/adc.h"
 // Include protothreads
 #include "pt_cornell_rp2040_v1_3.h"
+// include picture header
+#include "picture.h"
 
 // === the fixed point macros ========================================
 typedef signed int fix15;
@@ -116,9 +118,9 @@ typedef struct note {
     // Maybe add start time and 
 } note;
 
-const int numLanes = 3; // number of lanes
-volatile note notes[3][50]; // 3 lanes of notes, 50 is the max number of notes in each lane at a single time (arbitary large number)
-volatile int activeNotesInLane[3]; // number of notes in each lane
+#define numLanes 4 // number of lanes
+volatile note notes[numLanes][50]; // 3 lanes of notes, 50 is the max number of notes in each lane at a single time (arbitary large number)
+volatile int activeNotesInLane[numLanes]; // number of notes in each lane
 const int gravity = 20; // The speed at which the notes fall -- can be changed to make it harder or easier
 const int noteSkinniness = 2; // offset for the notes to make them look better and be in the center of the lane
 volatile int numNotesHit = 0; // number of notes hit 
@@ -302,6 +304,7 @@ static PT_THREAD(protothread_animation_loop(struct pt *pt))
     PT_BEGIN(pt);
     char notesTextBuffer[4];
 
+    drawPicture(0, 0, (unsigned short *)vga_image, 640, 480); // Draw the picture on the screen
     draw_background();
     // Spawn notes
     // spawn_note(0, RED, 50);
@@ -322,6 +325,7 @@ static PT_THREAD(protothread_animation_loop(struct pt *pt))
     setCursor(170, 25);
     sprintf(notesTextBuffer, "%d", numNotesMissed);
     writeString(notesTextBuffer);
+
     PT_YIELD_usec(30000); // Yield for 30ms
     }
 

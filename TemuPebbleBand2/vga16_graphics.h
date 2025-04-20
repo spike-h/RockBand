@@ -61,3 +61,5 @@ void writeStringBig(char* str) ;
 void setTextColorBig(char, char); //works, but can use usual setTextColor2
 // 5x7 font
 void writeStringBold(char* str);
+// =================================================
+void drawPicture(short x, short y, unsigned short *pic, short width, short height) ;

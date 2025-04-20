@@ -617,3 +617,26 @@ inline void writeStringBold(char* str){
     }
     textbgcolor = temp_bg ;
 }
+
+//=================================================
+inline void drawPicture(short x, short y, unsigned short *pic, short width, short height) {
+  /*
+    Draw a picture at (x,y) using the given array of pixels
+    Parameters:
+        x: x-coordinate of top-left vertex. The x-coordinate of
+            the top-left of the screen is 0. It increases to the right.
+        y: y-coordinate of top-left vertex. The y-coordinate of
+            the top-left of the screen is 0. It increases to the bottom.
+        pic: pointer to array of pixels (4-bit color values in form of 0-15)
+        width: width of the picture in pixels
+        height: height of the picture in pixels
+  */
+
+  // get the width and height of the picture by getting the size of the array
+  // it is an array of shorts where each short designates a pixel
+  for (short i=0; i<height; i++ ) {   
+    for (short j = 0; j<width; j++) {
+      drawPixel(x+j, y+i, pic[i * width + j]);
+    }
+  }
+}
