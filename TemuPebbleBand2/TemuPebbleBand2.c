@@ -112,14 +112,17 @@ typedef struct note {
     int height; // height of the note -- used for sustaning notes
     int color;  // ye (in form 0-15)
     bool hit; // if the note has been hit or not  - used for erasing the note as its hit
+    bool sustain; // if the note is a sustained note or not
     // Maybe add start time and 
 } note;
 
 const int numLanes = 3; // number of lanes
 volatile note notes[3][50]; // 3 lanes of notes, 50 is the max number of notes in each lane at a single time (arbitary large number)
 volatile int activeNotesInLane[3]; // number of notes in each lane
-const int gravity = 5; // The speed at which the notes fall -- can be changed to make it harder or easier
+const int gravity = 20; // The speed at which the notes fall -- can be changed to make it harder or easier
 const int noteSkinniness = 2; // offset for the notes to make them look better and be in the center of the lane
+volatile int numNotesHit = 0; // number of notes hit 
+volatile int numNotesMissed = 0; // number of notes missed 
 
 /**
  * @brief Initializes the VGA display -- draws background.
@@ -136,6 +139,13 @@ void draw_background()
     {
         drawVLine(SCREEN_WIDTH/2 - offset + (i * singleTrackWidth), 0, SCREEN_HEIGHT, WHITE);
     }
+    // Draw the number of hit and unhit notes on the screen
+    setCursor(10, 10);
+    setTextColor2(WHITE, BLACK);
+    setTextSize(2);
+    writeString("Notes Hit: ");
+    setCursor(10, 25);
+    writeString("Notes Missed: "); 
 }
 
 void draw_hitLine()
@@ -153,7 +163,7 @@ void draw_hitLine()
  * @param height The height of the note
  * @note Assumes that the lane is valid and that there is space in the lane
  */
-void spawn_note(int lane, int color, int height)
+void spawn_note(int lane, int color, int height, int sustain)
 {
     // Spawn a note in the given lane
     if (activeNotesInLane[lane] < 50) // check if there is space in the lane
@@ -163,6 +173,7 @@ void spawn_note(int lane, int color, int height)
         notes[lane][activeNotesInLane[lane]].height = height;
         notes[lane][activeNotesInLane[lane]].color = color;
         notes[lane][activeNotesInLane[lane]].hit = false; // not hit yet
+        notes[lane][activeNotesInLane[lane]].sustain = sustain; // not a sustained note (long press note)
         activeNotesInLane[lane]++;
     }
 }
@@ -182,10 +193,10 @@ void draw_notes(int erase)
             // Draw the note at its current position
             if (erase) // erase the note if needed
             {
-                if (erase == 1) { // erase the whole note
+                if (erase == 1) { // erase only the top of the note that moved down
                     fillRect(SCREEN_WIDTH/2 - trackWidth/2 + (i*singleTrackWidth) + noteSkinniness/2, notes[i][j].y, singleTrackWidth-noteSkinniness, gravity, BLACK); // erase the top of the note that moved down
                 }
-                else  {// erase only the top of the note that moved down
+                else  {// erase only the whole note
                     fillRect(SCREEN_WIDTH/2 - trackWidth/2 + (i*singleTrackWidth) + noteSkinniness/2, notes[i][j].y, singleTrackWidth-noteSkinniness, notes[i][j].height, BLACK); // erase the whole note, subtract 10 to make it look better
                 }
             }
@@ -211,6 +222,7 @@ void erase_note(int lane, int noteIndex)
     int singleTrackWidth = trackWidth/numLanes;
     // Erase the note at its current position
     // fillRect(SCREEN_WIDTH/2 - trackWidth/2 + (lane*singleTrackWidth) + noteSkinniness/2, notes[lane][noteIndex].y + notes[lane][noteIndex].height - gravity, singleTrackWidth-noteSkinniness, gravity, BLACK);  // erase the bottom of the note that moved down
+    if (!notes[lane][noteIndex].sustain) {fillRect(SCREEN_WIDTH/2 - trackWidth/2 + (lane*singleTrackWidth) + noteSkinniness/2, notes[lane][noteIndex].y, singleTrackWidth-noteSkinniness, notes[lane][noteIndex].height, BLACK);} // erase the whole note if it is not a sustained note
     activeNotesInLane[lane]--;
     notes[lane][noteIndex] = notes[lane][activeNotesInLane[lane]]; // Move the last note to the current position
 }
@@ -241,14 +253,16 @@ void update_notes()
             {
                 // Remove the note from the lane
                 erase_note(i, j);
+                numNotesMissed++; // increment the number of notes missed
                 continue; // skip the rest of the loop
             }
 
             // If the note has been hit, make it smaller
             if (notes[i][j].hit)
             {
+                numNotesHit++; // increment the number of notes hit
                 notes[i][j].height -= gravity; // make the note smaller
-                if (notes[i][j].height <= 0) // if the note is gone, remove it from the lane
+                if (notes[i][j].height <= 0 || (!notes[i][j].sustain)) // if the note is gone, remove it from the lane
                 {
                     erase_note(i, j);
                 }
@@ -269,9 +283,12 @@ static PT_THREAD(protothread_spawn_notes(struct pt *pt))
         // Spawn notes every 100ms
         int lane = rand() % numLanes; // Random lane
         int color = rand() % 16; // Random color
-        int height = rand() % (maxHeight); // Random height
-        spawn_note(lane, color, height);
-        PT_YIELD_usec(3000000); // Yield for 100ms
+        // int height = rand() % (maxHeight); // Random height
+        int sustain = rand() % 2; // Random sustain (0 or 1)
+        int height = hitWidth; // Fixed height for now
+        if (sustain) {color = YELLOW; height = 2*hitWidth;}
+        spawn_note(lane, color, height, sustain);
+        PT_YIELD_usec(750000); // Yield for 100ms
     }
 
     PT_END(pt);
@@ -283,6 +300,7 @@ static PT_THREAD(protothread_spawn_notes(struct pt *pt))
 static PT_THREAD(protothread_animation_loop(struct pt *pt))
 {
     PT_BEGIN(pt);
+    char notesTextBuffer[4];
 
     draw_background();
     // Spawn notes
@@ -296,6 +314,14 @@ static PT_THREAD(protothread_animation_loop(struct pt *pt))
     update_notes();
     draw_notes(0);
     draw_hitLine();
+
+    setCursor(130, 10);
+    sprintf(notesTextBuffer, "%d", numNotesHit);
+    writeString(notesTextBuffer);
+
+    setCursor(170, 25);
+    sprintf(notesTextBuffer, "%d", numNotesMissed);
+    writeString(notesTextBuffer);
     PT_YIELD_usec(30000); // Yield for 30ms
     }
 
