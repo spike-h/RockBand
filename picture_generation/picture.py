@@ -4,7 +4,7 @@ Its steps consist of:
 1. Load the image using PIL
 2. Convert the image into 16 colors using the quantize method of PIL
 3. Resize the image to fit the VGA screen (640x480)
-4. Convert the image into a 2D array of pixels, where each pixel is represented by a 16-bit color value
+4. Convert the image into a 2D array of pixels, where each pixel is represented by a 4-bit color value
 5. Save the image as a C header file that can be included in the VGA driver code
 '''
 import os
@@ -13,15 +13,41 @@ from PIL import Image
 import numpy as np
 import argparse
 
-def closest_color(pixel, palette):
-    """Find the closest color in the palette to the given pixel."""
-    r, g, b = pixel
-    closest_index = min(
-        enumerate(palette),
-        key=lambda color: (r - color[1][0])**2 + (g - color[1][1])**2 + (b - color[1][2])**2
-    )[0]
-    # print(closest_index)
-    return closest_index
+# def closest_color(pixel, palette):
+#     """Find the closest color in the palette to the given pixel."""
+#     r, g, b = pixel
+#     closest_index = min(
+#         enumerate(palette),
+#         key=lambda color: (r - color[1][0])**2 + (g - color[1][1])**2 + (b - color[1][2])**2
+#     )[0]
+#     # print(closest_index)
+#     return closest_index
+
+def closest(colors, pixels):
+    """
+    Map each pixel in a 2D image to the closest color in the palette.
+
+    Args:
+        colors: A NumPy array of shape (16, 3), representing the palette of 16 colors.
+        pixels: A NumPy array of shape (height, width, 3), representing the image's RGB pixels.
+
+    Returns:
+        A 2D NumPy array of shape (height, width), where each value is the index of the closest color in the palette.
+    """
+    colors = np.array(colors)  # Ensure colors is a NumPy array
+    pixels = np.array(pixels)  # Ensure pixels is a NumPy array
+
+    # Reshape the pixels array to (height * width, 3) for easier broadcasting
+    reshaped_pixels = pixels.reshape(-1, 3)
+
+    # Calculate the squared Euclidean distance between each pixel and each color in the palette
+    distances = np.sum((reshaped_pixels[:, None, :] - colors[None, :, :]) ** 2, axis=2)
+
+    # Find the index of the closest color for each pixel
+    closest_indices = np.argmin(distances, axis=1)
+
+    # Reshape the result back to the original image shape (height, width)
+    return closest_indices.reshape(pixels.shape[0], pixels.shape[1])
 
 def convert_image_to_vga(image_path, output_path):
     # Load the image using PIL
@@ -38,6 +64,14 @@ def convert_image_to_vga(image_path, output_path):
         (191, 53, 240), (185, 195, 234), (183, 131, 239), (255, 255, 255)
     ]
 
+    # Mathy version of the palette
+    palette = [
+        (0, 0, 0), (0, 187, 0), (0, 132, 0), (0, 255, 0),
+        (0, 0, 255), (0, 187, 255), (0, 132, 255), (0, 255, 255),
+        (255, 0, 0), (255, 187, 0), (255, 132, 9), (255, 255, 0),
+        (255, 0, 255), (255, 187, 255), (255, 132, 255), (255, 255, 255)
+    ]
+
     # Convert the image to RGB mode to get the pixel values
     img = img.convert('RGB')
 
@@ -51,9 +85,11 @@ def convert_image_to_vga(image_path, output_path):
     # make a 2d array of pixels with the same shape as the resized image
     new_pixels = np.zeros((pixels.shape[0], pixels.shape[1]), dtype=np.uint16)
     print(new_pixels.shape)
-    for i in range(pixels.shape[0]):
-        for j in range(pixels.shape[1]):
-            new_pixels[i, j] = closest_color(pixels[i, j], palette)
+    # print(new_pixels.shape)
+    # for i in range(pixels.shape[0]):
+    #     for j in range(pixels.shape[1]):
+    #         new_pixels[i, j] = closest_color(pixels[i, j], palette)
+    new_pixels = closest(palette, pixels)
 
     # Convert the new pixel array back to an image
     # img = Image.fromarray(np.uint8(new_pixels))
