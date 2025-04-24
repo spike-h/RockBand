@@ -96,6 +96,37 @@ typedef signed int fix15;
 // =================================== BEGIN AUDIO SYNTHESIS CODE =================================================
 // ================================================================================================================
 
+// Number of samples per period in sine table
+#define sine_table_size 256
+
+// Sine table
+int raw_sin[sine_table_size];
+
+// Table of values to be sent to DAC
+unsigned short DAC_data[sine_table_size];
+
+// Pointer to the address of the DAC data table
+unsigned short *address_pointer2 = &DAC_data[0];
+
+// A-channel, 1x, active
+#define DAC_config_chan_B 0b1011000000000000
+
+// Number of DMA transfers per event
+const uint32_t transfer_count = sine_table_size;
+
+// initializing dma channels
+int data_chan;
+int ctrl_chan;
+
+void play_sound() {
+            // *thunk*
+    if (dma_channel_is_busy(data_chan))
+    {
+        dma_channel_wait_for_finish_blocking(ctrl_chan);
+    }
+    dma_start_channel_mask(1u << ctrl_chan);
+}
+
 // ================================================================================================================
 // ====================================== END AUDIO SYNTHESIS CODE ================================================
 // ================================================================================================================
@@ -132,14 +163,14 @@ volatile int numNotesMissed = 0; // number of notes missed
 void draw_background()
 {
     // Draw vertical lines on the screen equally spaced away from the center
-    int offset = trackWidth/2;
-    int singleTrackWidth = trackWidth/numLanes;
-    drawVLine(SCREEN_WIDTH/2 + offset, 0, SCREEN_HEIGHT, WHITE);
-    drawVLine(SCREEN_WIDTH/2 - offset, 0, SCREEN_HEIGHT, WHITE);
+    float offset = trackWidth/2;
+    float singleTrackWidth = trackWidth/numLanes;
+    // drawVLine(SCREEN_WIDTH/2 + offset, 0, SCREEN_HEIGHT, WHITE);
+    drawVLine(SCREEN_WIDTH/2 - trackWidth/2, 0, SCREEN_HEIGHT, WHITE);
     // Draws the track lines -- lines in between the two outer lines dictated by numLines
-    for (int i = 1; i < numLanes; i++)
+    for (int i = 1; i <= numLanes; i++)
     {
-        drawVLine(SCREEN_WIDTH/2 - offset + (i * singleTrackWidth), 0, SCREEN_HEIGHT, WHITE);
+        drawVLine(SCREEN_WIDTH/2 - trackWidth/2 + (i * trackWidth/numLanes), 0, SCREEN_HEIGHT, WHITE);
     }
     // Draw the number of hit and unhit notes on the screen
     setCursor(10, 10);
@@ -196,17 +227,17 @@ void draw_notes(int erase)
             if (erase) // erase the note if needed
             {
                 if (erase == 1) { // erase only the top of the note that moved down
-                    fillRect(SCREEN_WIDTH/2 - trackWidth/2 + (i*singleTrackWidth) + noteSkinniness/2, notes[i][j].y, singleTrackWidth-noteSkinniness, gravity, BLACK); // erase the top of the note that moved down
+                    fillRect(SCREEN_WIDTH/2 - trackWidth/2 + (i*trackWidth/numLanes) + noteSkinniness, notes[i][j].y, trackWidth/numLanes-noteSkinniness, gravity, BLACK); // erase the top of the note that moved down
                 }
                 else  {// erase only the whole note
-                    fillRect(SCREEN_WIDTH/2 - trackWidth/2 + (i*singleTrackWidth) + noteSkinniness/2, notes[i][j].y, singleTrackWidth-noteSkinniness, notes[i][j].height, BLACK); // erase the whole note, subtract 10 to make it look better
+                    fillRect(SCREEN_WIDTH/2 - trackWidth/2 + (i*trackWidth/numLanes) + noteSkinniness, notes[i][j].y, trackWidth/numLanes-noteSkinniness, notes[i][j].height, BLACK); // erase the whole note, subtract 10 to make it look better
                 }
             }
             else {
                 // FOR PIANO THIS IS FINE BUT FOR DRUM WE WILL NEED TO DELETE THE WHOLE NOTE ONCE IT IS HIT
                 // if (!notes[i][j].hit) { // dont move the note down if its been hit 
                 // fillRect(SCREEN_WIDTH/2 - trackWidth/2 + (i*singleTrackWidth), notes[i][j].y, singleTrackWidth-5, notes[i][j].height, notes[i][j].color); // draw the whole note
-                    fillRect(SCREEN_WIDTH/2 - trackWidth/2 + (i*singleTrackWidth) + noteSkinniness/2, notes[i][j].y + max(notes[i][j].height - gravity, 0), singleTrackWidth-noteSkinniness, gravity, notes[i][j].color); // draw the bottom of the note that moved down
+                    fillRect(SCREEN_WIDTH/2 - trackWidth/2 + (i*trackWidth/numLanes) + noteSkinniness, notes[i][j].y + max(notes[i][j].height - gravity, 0), trackWidth/numLanes-noteSkinniness, gravity, notes[i][j].color); // draw the bottom of the note that moved down
                 // }
                 printf("Note %d in lane %d at y = %f, height = %d, hit_satus = %d\n", j, i, notes[i][j].y, notes[i][j].height, notes[i][j].hit); // print the note position for debugging
             }
@@ -224,7 +255,7 @@ void erase_note(int lane, int noteIndex)
     int singleTrackWidth = trackWidth/numLanes;
     // Erase the note at its current position
     // fillRect(SCREEN_WIDTH/2 - trackWidth/2 + (lane*singleTrackWidth) + noteSkinniness/2, notes[lane][noteIndex].y + notes[lane][noteIndex].height - gravity, singleTrackWidth-noteSkinniness, gravity, BLACK);  // erase the bottom of the note that moved down
-    if (!notes[lane][noteIndex].sustain) {fillRect(SCREEN_WIDTH/2 - trackWidth/2 + (lane*singleTrackWidth) + noteSkinniness/2, notes[lane][noteIndex].y, singleTrackWidth-noteSkinniness, notes[lane][noteIndex].height, BLACK);} // erase the whole note if it is not a sustained note
+    if (!notes[lane][noteIndex].sustain) {fillRect(SCREEN_WIDTH/2 - trackWidth/2 + (lane*trackWidth/numLanes) + noteSkinniness, notes[lane][noteIndex].y, trackWidth/numLanes-noteSkinniness, notes[lane][noteIndex].height, BLACK);} // erase the whole note if it is not a sustained note
     activeNotesInLane[lane]--;
     notes[lane][noteIndex] = notes[lane][activeNotesInLane[lane]]; // Move the last note to the current position
 }
@@ -427,6 +458,7 @@ void key_pressed_callback(int key)
                 if (check_hit(noteKey))
                 {
                     notes[key][i].hit = true; // mark the note as hit
+                    play_sound(); // play sound
                 }
             }
         }
@@ -506,6 +538,59 @@ int main()
     gpio_set_function(PIN_SCK, GPIO_FUNC_SPI);
     gpio_set_function(PIN_MOSI, GPIO_FUNC_SPI);
     gpio_set_function(PIN_CS, GPIO_FUNC_SPI);
+
+    // initialize the DAC
+    // Build sine table and DAC data table
+    int i;
+    for (i = 0; i < (sine_table_size); i++)
+    {
+        raw_sin[i] = (int)(2047 * sin((float)i * 6.283 / (float)sine_table_size) + 2047); // 12 bit
+        DAC_data[i] = DAC_config_chan_B | (raw_sin[i] & 0x0fff);
+    }
+
+    // // Select DMA channels
+    data_chan = dma_claim_unused_channel(true);
+    ;
+    ctrl_chan = dma_claim_unused_channel(true);
+    ;
+
+    // Setup the control channel
+    dma_channel_config c = dma_channel_get_default_config(ctrl_chan); // default configs
+    channel_config_set_transfer_data_size(&c, DMA_SIZE_32);           // 32-bit txfers
+    channel_config_set_read_increment(&c, false);                     // no read incrementing
+    channel_config_set_write_increment(&c, false);                    // no write incrementing
+    channel_config_set_chain_to(&c, data_chan);                       // chain to data channel
+
+    dma_channel_configure(
+        ctrl_chan,                        // Channel to be configured
+        &c,                               // The configuration we just created
+        &dma_hw->ch[data_chan].read_addr, // Write address (data channel read address)
+        &address_pointer2,                // Read address (POINTER TO AN ADDRESS)
+        1,                                // Number of transfers
+        false                             // Don't start immediately
+    );
+
+    // Setup the data channel
+    dma_channel_config c2 = dma_channel_get_default_config(data_chan); // Default configs
+    channel_config_set_transfer_data_size(&c2, DMA_SIZE_16);           // 16-bit txfers
+    channel_config_set_read_increment(&c2, true);                      // yes read incrementing
+    channel_config_set_write_increment(&c2, false);                    // no write incrementing
+    // (X/Y)*sys_clk, where X is the first 16 bytes and Y is the second
+    // sys_clk is 125 MHz unless changed in code. Configured to ~44 kHz
+    dma_timer_set_fraction(0, 0x0017, 0xffff);
+    // 0x3b means timer0 (see SDK manual)
+    channel_config_set_dreq(&c2, 0x3b); // DREQ paced by timer 0
+    // chain to the controller DMA channel
+    // channel_config_set_chain_to(&c2, ctrl_chan); // Chain to control channel
+
+    dma_channel_configure(
+        data_chan,                 // Channel to be configured
+        &c2,                       // The configuration we just created
+        &spi_get_hw(SPI_PORT)->dr, // write address (SPI data register)
+        DAC_data,                  // The initial read address
+        5626,           // Number of transfers
+        false                      // Don't start immediately.
+    );
 
     // initialize VGA
     initVGA();
