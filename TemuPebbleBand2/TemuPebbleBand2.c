@@ -52,7 +52,9 @@
 // Include protothreads
 #include "pt_cornell_rp2040_v1_3.h"
 // include picture header
-#include "picture.h"
+#include "menubg.h"
+// include dac header
+#include "amplitude_envelope.h"
 
 // === the fixed point macros ========================================
 typedef signed int fix15;
@@ -97,13 +99,13 @@ typedef signed int fix15;
 // ================================================================================================================
 
 // Number of samples per period in sine table
-#define sine_table_size 256
+#define sine_table_size 56262
 
 // Sine table
 int raw_sin[sine_table_size];
 
 // Table of values to be sent to DAC
-unsigned short DAC_data[sine_table_size];
+// unsigned short DAC_data[sine_table_size];
 
 // Pointer to the address of the DAC data table
 unsigned short *address_pointer2 = &DAC_data[0];
@@ -541,12 +543,12 @@ int main()
 
     // initialize the DAC
     // Build sine table and DAC data table
-    int i;
-    for (i = 0; i < (sine_table_size); i++)
-    {
-        raw_sin[i] = (int)(2047 * sin((float)i * 6.283 / (float)sine_table_size) + 2047); // 12 bit
-        DAC_data[i] = DAC_config_chan_B | (raw_sin[i] & 0x0fff);
-    }
+    // int i;
+    // for (i = 0; i < (sine_table_size); i++)
+    // {
+    //     raw_sin[i] = (int)(2047 * sin((float)i * 6.283 / (float)sine_table_size) + 2047); // 12 bit
+    //     DAC_data[i] = DAC_config_chan_B | (raw_sin[i] & 0x0fff);
+    // }
 
     // // Select DMA channels
     data_chan = dma_claim_unused_channel(true);
