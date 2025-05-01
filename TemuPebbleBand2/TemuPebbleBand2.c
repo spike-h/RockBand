@@ -587,8 +587,8 @@ int main()
     channel_config_set_read_increment(&c2, true);                      // yes read incrementing
     channel_config_set_write_increment(&c2, false);                    // no write incrementing
     // (X/Y)*sys_clk, where X is the first 16 bytes and Y is the second
-    // sys_clk is 125 MHz unless changed in code. Configured to ~44 kHz
-    dma_timer_set_fraction(0, 0x0017, 0xffff);
+    // sys_clk is 125 MHz unless changed in code. Configured to ~22 kHz
+    dma_timer_set_fraction(0, 0x000B, 0xffff);
     // 0x3b means timer0 (see SDK manual)
     channel_config_set_dreq(&c2, 0x3b); // DREQ paced by timer 0
     // chain to the controller DMA channel
@@ -599,7 +599,7 @@ int main()
         &c2,                       // The configuration we just created
         &spi_get_hw(SPI_PORT)->dr, // write address (SPI data register)
         DAC_data,                  // The initial read address
-        5626,           // Number of transfers
+        56262,           // Number of transfers
         false                      // Don't start immediately.
     );
 
