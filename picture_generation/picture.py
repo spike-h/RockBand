@@ -105,9 +105,14 @@ def convert_image_to_vga(image_path, output_path):
     with open(output_path, 'w') as f:
         f.write('#ifndef VGA_IMAGE_H\n')
         f.write('#define VGA_IMAGE_H\n\n')
-        f.write('const unsigned short vga_image[480 * 640] = {\n')
+        f.write('const unsigned short vga_image[480 * 320] = {\n')
         for row in new_pixels:
-            f.write(', '.join(map(str, row)) + ',\n')
+            new_row = []
+            for i in range(0, len(row), 2):
+                z = f'0x{row[i]:1x}{row[i+1]:1x}'
+                new_row.append(int(z,16))
+                # print(z)
+            f.write(', '.join(map(str, new_row)) + ',\n')
         f.write('};\n\n')
         f.write('#endif // VGA_IMAGE_H\n')
 

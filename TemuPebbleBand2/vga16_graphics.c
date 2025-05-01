@@ -635,8 +635,15 @@ inline void drawPicture(short x, short y, unsigned short *pic, short width, shor
   // get the width and height of the picture by getting the size of the array
   // it is an array of shorts where each short designates a pixel
   for (short i=0; i<height; i++ ) {   
-    for (short j = 0; j<width; j++) {
-      drawPixel(x+j, y+i, pic[i * width + j]);
+    short j = 0;
+    short k = 0;
+    while (j<width) {
+      drawPixel(x+j, y+i, pic[i * width/2 + k] & 0x0F); // get the color of the pixel
+      drawPixel(x+j+1, y+i, (pic[i * width/2 + k] & 0xF0) >> 4); // get the color of the pixel
+      // print the positions
+      // printf("x: %d, y: %d, color: %d\n", x+j, y+i, pic[i * width + j]);
+      j += 2; // increment by 2 since we are using 2 pixels per byte
+      k++;
     }
   }
 }

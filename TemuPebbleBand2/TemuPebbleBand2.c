@@ -52,7 +52,7 @@
 // Include protothreads
 #include "pt_cornell_rp2040_v1_3.h"
 // include picture header
-#include "menubg.h"
+#include "kyle2.h"
 // include dac header
 #include "amplitude_envelope.h"
 
@@ -138,8 +138,9 @@ void play_sound() {
 // ================================================================================================================
 
 const int trackWidth = SCREEN_WIDTH/3; // total width of the track
-const int hitHeight = 80; // top height of the hit line from above the bottom of the screen
+const int hitHeight = 120; // top height of the hit line from above the bottom of the screen
 const int hitWidth = 40; // how tall the hit line is (hittable area)
+int combo = 0; // combo counter for the number of notes hit in a row
 
 typedef struct note {
     int lane;   // which lane number it is in i.e. || 1 || 2  || 3 ||
@@ -151,7 +152,7 @@ typedef struct note {
     // Maybe add start time and 
 } note;
 
-#define numLanes 4 // number of lanes
+#define numLanes 2 // number of lanes
 volatile note notes[numLanes][50]; // 3 lanes of notes, 50 is the max number of notes in each lane at a single time (arbitary large number)
 volatile int activeNotesInLane[numLanes]; // number of notes in each lane
 const int gravity = 20; // The speed at which the notes fall -- can be changed to make it harder or easier
@@ -181,6 +182,8 @@ void draw_background()
     writeString("Notes Hit: ");
     setCursor(10, 25);
     writeString("Notes Missed: "); 
+    setCursor(10, 40);
+    writeString("Combo: "); 
 }
 
 void draw_hitLine()
@@ -289,6 +292,7 @@ void update_notes()
                 // Remove the note from the lane
                 erase_note(i, j);
                 numNotesMissed++; // increment the number of notes missed
+                combo = 0; // reset the combo counter
                 continue; // skip the rest of the loop
             }
 
@@ -323,7 +327,7 @@ static PT_THREAD(protothread_spawn_notes(struct pt *pt))
         int height = hitWidth; // Fixed height for now
         if (sustain) {color = YELLOW; height = 2*hitWidth;}
         spawn_note(lane, color, height, sustain);
-        PT_YIELD_usec(750000); // Yield for 100ms
+        PT_YIELD_usec(750000/2); // Yield for 100ms
     }
 
     PT_END(pt);
@@ -357,6 +361,10 @@ static PT_THREAD(protothread_animation_loop(struct pt *pt))
 
     setCursor(170, 25);
     sprintf(notesTextBuffer, "%d", numNotesMissed);
+    writeString(notesTextBuffer);
+
+    setCursor(80, 40);
+    sprintf(notesTextBuffer, "%d", combo);
     writeString(notesTextBuffer);
 
     PT_YIELD_usec(30000); // Yield for 30ms
@@ -461,6 +469,7 @@ void key_pressed_callback(int key)
                 {
                     notes[key][i].hit = true; // mark the note as hit
                     play_sound(); // play sound
+                    combo++; // increment the combo counter
                 }
             }
         }
@@ -616,7 +625,7 @@ int main()
     // Add core 0 threads
     pt_add_thread(protothread_animation_loop);
     pt_add_thread(protothread_spawn_notes);
-    // pt_add_thread(protothread_blinky);
+    pt_add_thread(protothread_blinky);
     pt_add_thread(protothread_keypad_scan);
     // Start scheduling core 0 threads
     pt_schedule_start;
