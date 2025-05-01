@@ -599,7 +599,7 @@ int main()
         &c2,                       // The configuration we just created
         &spi_get_hw(SPI_PORT)->dr, // write address (SPI data register)
         DAC_data,                  // The initial read address
-        56262,           // Number of transfers
+        transfer_count,            // Number of transfers
         false                      // Don't start immediately.
     );
 
