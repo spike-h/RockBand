@@ -52,9 +52,9 @@
 // Include protothreads
 #include "pt_cornell_rp2040_v1_3.h"
 // include picture header
-#include "gamebg.h"
+#include "zarif.h"
 // include dac header
-#include "amplitude_envelope.h"
+#include "amplitude_envelope_mario.h"
 
 // === the fixed point macros ========================================
 typedef signed int fix15;
@@ -99,7 +99,7 @@ typedef signed int fix15;
 // ================================================================================================================
 
 // Number of samples per period in sine table
-#define sine_table_size 59806
+#define sine_table_size 492868
 
 // Sine table
 int raw_sin[sine_table_size];
@@ -108,7 +108,7 @@ int raw_sin[sine_table_size];
 // unsigned short DAC_data[sine_table_size];
 
 // Pointer to the address of the DAC data table
-unsigned short *address_pointer2 = &DAC_data[0];
+const unsigned short *address_pointer2 = &DAC_data[0];
 
 // A-channel, 1x, active
 #define DAC_config_chan_B 0b1011000000000000
@@ -155,7 +155,7 @@ typedef struct note
     // Maybe add start time and
 } note;
 
-#define numLanes 13                                                 // number of lanes
+#define numLanes 4                                                 // number of lanes
 volatile note notes[numLanes][50];                                   // 3 lanes of notes, 50 is the max number of notes in each lane at a single time (arbitary large number)
 volatile int activeNotesInLane[numLanes];                            // number of notes in each lane
 const int gravity = 20;                                              // The speed at which the notes fall -- can be changed to make it harder or easier
@@ -163,7 +163,7 @@ const int noteSkinniness = 2;                                        // offset f
 volatile int numNotesHit = 0;                                        // number of notes hit
 volatile int numNotesMissed = 0;                                     // number of notes missed
 const bool pianoKeyTypes[13] = {1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1}; // 1 is a white key 0 is black -- used for drawing the piano keys on the screen
-bool pianoKeysPressed[13] = {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0};
+bool pianoKeysPressed[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 void draw_piano(int lane, bool outline);
 
@@ -465,7 +465,7 @@ static PT_THREAD(protothread_animation_loop(struct pt *pt))
     PT_BEGIN(pt);
     char notesTextBuffer[4];
 
-    drawPicture(0, 0, (unsigned short *)vga_image, 640, 480); // Draw the picture on the screen
+    drawPicture(160, 0, (unsigned short *)vga_image, 640, 480); // Draw the picture on the screen
     draw_background();
     // Spawn notes
     // spawn_note(0, RED, 50);
