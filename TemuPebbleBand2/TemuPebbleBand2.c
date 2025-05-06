@@ -20,8 +20,8 @@
  * #define DAC PIN_MOSI 7
  * # LDAC to gnd
  * # button on GPIO 3 and GND
- * 
- * 
+ *
+ *
  *
  * RESOURCES USED
  *  - PIO state machines 0, 1, and 2 on PIO instance 0
@@ -52,7 +52,7 @@
 // Include protothreads
 #include "pt_cornell_rp2040_v1_3.h"
 // include picture header
-#include "kyle2.h"
+#include "gamebg.h"
 // include dac header
 #include "amplitude_envelope.h"
 
@@ -99,7 +99,7 @@ typedef signed int fix15;
 // ================================================================================================================
 
 // Number of samples per period in sine table
-#define sine_table_size 56262
+#define sine_table_size 59806
 
 // Sine table
 int raw_sin[sine_table_size];
@@ -120,8 +120,9 @@ const uint32_t transfer_count = sine_table_size;
 int data_chan;
 int ctrl_chan;
 
-void play_sound() {
-            // *thunk*
+void play_sound()
+{
+    // *thunk*
     if (dma_channel_is_busy(data_chan))
     {
         dma_channel_wait_for_finish_blocking(ctrl_chan);
@@ -137,28 +138,34 @@ void play_sound() {
 // ======================================  BEGIN ANIMATION CODE ===================================================
 // ================================================================================================================
 
-const int trackWidth = SCREEN_WIDTH/3; // total width of the track
-const int hitHeight = 120; // top height of the hit line from above the bottom of the screen
-const int hitWidth = 40; // how tall the hit line is (hittable area)
-int combo = 0; // combo counter for the number of notes hit in a row
+const int trackWidth = SCREEN_WIDTH / 3; // total width of the track
+const int whiteHeight = 120;            // height of the white key
+const int hitHeight = whiteHeight + 80;               // top height of the hit line from above the bottom of the screen
+const int hitWidth = 40;                 // how tall the hit line is (hittable area)
+int combo = 0;                           // combo counter for the number of notes hit in a row
 
-typedef struct note {
-    int lane;   // which lane number it is in i.e. || 1 || 2  || 3 ||
+typedef struct note
+{
+    int lane;     // which lane number it is in i.e. || 1 || 2  || 3 ||
     float y;      // y position of the note (top edge of rectangle)
-    int height; // height of the note -- used for sustaning notes
-    int color;  // ye (in form 0-15)
-    bool hit; // if the note has been hit or not  - used for erasing the note as its hit
+    int height;   // height of the note -- used for sustaning notes
+    int color;    // ye (in form 0-15)
+    bool hit;     // if the note has been hit or not  - used for erasing the note as its hit
     bool sustain; // if the note is a sustained note or not
-    // Maybe add start time and 
+    // Maybe add start time and
 } note;
 
-#define numLanes 2 // number of lanes
-volatile note notes[numLanes][50]; // 3 lanes of notes, 50 is the max number of notes in each lane at a single time (arbitary large number)
-volatile int activeNotesInLane[numLanes]; // number of notes in each lane
-const int gravity = 20; // The speed at which the notes fall -- can be changed to make it harder or easier
-const int noteSkinniness = 2; // offset for the notes to make them look better and be in the center of the lane
-volatile int numNotesHit = 0; // number of notes hit 
-volatile int numNotesMissed = 0; // number of notes missed 
+#define numLanes 13                                                 // number of lanes
+volatile note notes[numLanes][50];                                   // 3 lanes of notes, 50 is the max number of notes in each lane at a single time (arbitary large number)
+volatile int activeNotesInLane[numLanes];                            // number of notes in each lane
+const int gravity = 20;                                              // The speed at which the notes fall -- can be changed to make it harder or easier
+const int noteSkinniness = 2;                                        // offset for the notes to make them look better and be in the center of the lane
+volatile int numNotesHit = 0;                                        // number of notes hit
+volatile int numNotesMissed = 0;                                     // number of notes missed
+const bool pianoKeyTypes[13] = {1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1}; // 1 is a white key 0 is black -- used for drawing the piano keys on the screen
+bool pianoKeysPressed[13] = {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0};
+
+void draw_piano(int lane, bool outline);
 
 /**
  * @brief Initializes the VGA display -- draws background.
@@ -166,14 +173,14 @@ volatile int numNotesMissed = 0; // number of notes missed
 void draw_background()
 {
     // Draw vertical lines on the screen equally spaced away from the center
-    float offset = trackWidth/2;
-    float singleTrackWidth = trackWidth/numLanes;
+    float offset = trackWidth / 2;
+    float singleTrackWidth = trackWidth / numLanes;
     // drawVLine(SCREEN_WIDTH/2 + offset, 0, SCREEN_HEIGHT, WHITE);
-    drawVLine(SCREEN_WIDTH/2 - trackWidth/2, 0, SCREEN_HEIGHT, WHITE);
+    // drawVLine(SCREEN_WIDTH / 2 - trackWidth / 2, 0, SCREEN_HEIGHT, WHITE);
     // Draws the track lines -- lines in between the two outer lines dictated by numLines
-    for (int i = 1; i <= numLanes; i++)
+    for (int i = 0; i <= numLanes; i++)
     {
-        drawVLine(SCREEN_WIDTH/2 - trackWidth/2 + (i * trackWidth/numLanes), 0, SCREEN_HEIGHT, WHITE);
+        drawVLine(SCREEN_WIDTH / 2 - trackWidth / 2 + (i * trackWidth / numLanes), 0, SCREEN_HEIGHT, WHITE);
     }
     // Draw the number of hit and unhit notes on the screen
     setCursor(10, 10);
@@ -181,17 +188,113 @@ void draw_background()
     setTextSize(2);
     writeString("Notes Hit: ");
     setCursor(10, 25);
-    writeString("Notes Missed: "); 
+    writeString("Notes Missed: ");
     setCursor(10, 40);
-    writeString("Combo: "); 
+    writeString("Combo: ");
+
+    // Draw a piano diagram on the screen
+    for (int i = 0; i < numLanes; i++)
+    {
+        draw_piano(i, 0); // draw the piano keys on the screen
+    }
+
+    // Draw black keys on the screen
+    // for (int i = 0; i < 12; i++)
+    // {
+    //     if (!pianoKeyTypes[i])
+    //     {
+    //         fillRect(SCREEN_WIDTH / 2 - trackWidth / 2 + (i * trackWidth / numLanes), SCREEN_HEIGHT - hitHeight, trackWidth / numLanes, hitHeight / 2, BLACK); // draw the bottom of the note that moved down
+    //     }
+    // }
+}
+
+void draw_piano(int lane, bool outline)
+{
+    // Draw the piano keys on the screen
+    int blackHeight = whiteHeight / 2; // height of the black key
+    char keyColor;
+    char outlineColor;
+    if (activeNotesInLane[lane] > 0)
+    {
+        outlineColor = MAGENTA;
+    }
+    else
+    {
+        outlineColor = GREEN;
+    }
+    if (pianoKeyTypes[lane]) // white key
+    {
+        if (pianoKeysPressed[lane])
+        {
+            keyColor = RED;
+        }
+        else
+        {
+            keyColor = WHITE;
+        }
+        if (((lane != (numLanes - 1)) && (lane != 0)) && (!(pianoKeyTypes[lane + 1]) && !(pianoKeyTypes[lane - 1]))) // black key on the right and left
+        {
+            if (!outline) {
+                fillRect(SCREEN_WIDTH / 2 - trackWidth / 2 + (lane * trackWidth / numLanes) - 1, SCREEN_HEIGHT - whiteHeight, (trackWidth / numLanes) + 2, whiteHeight, keyColor);                                 // draw the note and bleed it into the next lane a bit
+                fillRect(SCREEN_WIDTH / 2 - trackWidth / 2 + ((lane + 1) * trackWidth / numLanes) - 2, SCREEN_HEIGHT - whiteHeight + blackHeight, (trackWidth / numLanes) * 1 / 2 + 2,  blackHeight, keyColor); // draw the note and bleed it into the next lane a bit
+                fillRect(SCREEN_WIDTH / 2 - trackWidth / 2 + ((lane - 1) * trackWidth / numLanes) + trackWidth /(2*numLanes) - 2, SCREEN_HEIGHT - whiteHeight + blackHeight, (trackWidth / numLanes) * 1 / 2 + 2, blackHeight, keyColor); // draw the note and bleed it into the next lane a bit
+            }
+            drawRect (SCREEN_WIDTH / 2 - trackWidth / 2 + ((lane - 1) * trackWidth / numLanes) + trackWidth /(2*numLanes), SCREEN_HEIGHT - whiteHeight, (trackWidth / numLanes) * 2, whiteHeight, outlineColor);                     // draw the outline
+            char rightCOlor = (pianoKeysPressed[lane + 1]) ? GREEN : BLACK;
+            drawVLine(SCREEN_WIDTH / 2 - trackWidth / 2 + ((lane - 1) * trackWidth / numLanes) + trackWidth /(2*numLanes) + (trackWidth / numLanes) * 2 - 1, SCREEN_HEIGHT - whiteHeight, blackHeight, rightCOlor);           // draw the outline
+            char leftCOlor = (pianoKeysPressed[lane - 1]) ? GREEN : BLACK;
+            drawVLine(SCREEN_WIDTH / 2 - trackWidth / 2 + ((lane - 1) * trackWidth / numLanes) + trackWidth /(2*numLanes), SCREEN_HEIGHT - whiteHeight, blackHeight, leftCOlor);
+
+        }                                                         
+        else if (lane != (numLanes - 1) && !(pianoKeyTypes[lane + 1])) // black key on the right
+        {
+            if (!outline) {
+                fillRect(SCREEN_WIDTH / 2 - trackWidth / 2 + (lane * trackWidth / numLanes) -1, SCREEN_HEIGHT - whiteHeight, (trackWidth / numLanes) + 2, whiteHeight, keyColor);                                 // draw the note and bleed it into the next lane a bit
+                fillRect(SCREEN_WIDTH / 2 - trackWidth / 2 + ((lane + 1) * trackWidth / numLanes) - 2, SCREEN_HEIGHT - whiteHeight + blackHeight, (trackWidth / numLanes) * 1 / 2 + 2, blackHeight, keyColor); // draw the note and bleed it into the next lane a bit
+            }
+            drawRect(SCREEN_WIDTH / 2 - trackWidth / 2 + (lane * trackWidth / numLanes), SCREEN_HEIGHT - whiteHeight, (trackWidth / numLanes) * 3 / 2 + 1, whiteHeight, outlineColor);                     // draw the outline
+            char rightCOlor = (pianoKeysPressed[lane + 1]) ? GREEN : BLACK;
+            drawVLine(SCREEN_WIDTH / 2 - trackWidth / 2 + (lane * trackWidth / numLanes) + (trackWidth / numLanes) * 3 / 2, SCREEN_HEIGHT - whiteHeight, blackHeight, rightCOlor);
+        }
+        else if (lane != 0 && !(pianoKeyTypes[lane - 1])) // black key on the left
+        {
+            if (!outline) {
+                fillRect(SCREEN_WIDTH / 2 - trackWidth / 2 + (lane * trackWidth / numLanes) -2 , SCREEN_HEIGHT - whiteHeight, (trackWidth / numLanes) + 2, whiteHeight, keyColor);                                 // draw the note and bleed it into the next lane a bit
+                fillRect(SCREEN_WIDTH / 2 - trackWidth / 2 + ((lane - 1) * trackWidth / numLanes) + trackWidth /(2*numLanes) - 2, SCREEN_HEIGHT - whiteHeight + blackHeight, (trackWidth / numLanes) * 1 / 2 + 2, blackHeight, keyColor); // draw the note and bleed it into the next lane a bit
+            }
+            drawRect (SCREEN_WIDTH / 2 - trackWidth / 2 + ((lane - 1) * trackWidth / numLanes) + trackWidth /(2*numLanes) - 1, SCREEN_HEIGHT - whiteHeight, (trackWidth / numLanes) * 3 / 2 + 3, whiteHeight, outlineColor);               // draw the outline
+            char leftCOlor = (pianoKeysPressed[lane - 1]) ? GREEN : BLACK;
+            drawVLine(SCREEN_WIDTH / 2 - trackWidth / 2 + ((lane - 1) * trackWidth / numLanes) + trackWidth /(2*numLanes) - 1, SCREEN_HEIGHT - whiteHeight, blackHeight, leftCOlor);
+        } 
+        else // no black key on either side
+        {
+            if (!outline) {
+                fillRect(SCREEN_WIDTH / 2 - trackWidth / 2 + (lane * trackWidth / numLanes) -1, SCREEN_HEIGHT - whiteHeight, (trackWidth / numLanes) + 2, whiteHeight, keyColor);
+            }
+            drawRect(SCREEN_WIDTH / 2 - trackWidth / 2 + (lane * trackWidth / numLanes), SCREEN_HEIGHT - whiteHeight, (trackWidth / numLanes) + 1, whiteHeight, outlineColor);
+        }
+    }
+    else // black key
+    {
+        if (pianoKeysPressed[lane])
+        {
+            keyColor = GREEN;
+        }
+        else
+        {
+            keyColor = BLACK;
+        }
+        fillRect(SCREEN_WIDTH / 2 - trackWidth / 2 + (lane * trackWidth / numLanes), SCREEN_HEIGHT - whiteHeight, trackWidth / numLanes, blackHeight, keyColor);     // draw the bottom of the note that moved down
+        drawRect(SCREEN_WIDTH / 2 - trackWidth / 2 + (lane * trackWidth / numLanes), SCREEN_HEIGHT - whiteHeight, trackWidth / numLanes, blackHeight, outlineColor); // draw the bottom of the note that moved down
+    }
 }
 
 void draw_hitLine()
 {
     // Draw the hit line -- the line that the notes must hit
-    int singleTrackWidth = trackWidth/numLanes;
-    drawHLine(SCREEN_WIDTH/2 - trackWidth/2, SCREEN_HEIGHT - hitHeight, trackWidth, WHITE);
-    drawHLine(SCREEN_WIDTH/2 - trackWidth/2, SCREEN_HEIGHT - hitHeight + hitWidth, trackWidth, WHITE);
+    int singleTrackWidth = trackWidth / numLanes;
+    drawHLine(SCREEN_WIDTH / 2 - trackWidth / 2, SCREEN_HEIGHT - hitHeight, trackWidth, WHITE);
+    drawHLine(SCREEN_WIDTH / 2 - trackWidth / 2, SCREEN_HEIGHT - hitHeight + hitWidth, trackWidth, WHITE);
 }
 
 /**
@@ -210,19 +313,20 @@ void spawn_note(int lane, int color, int height, int sustain)
         notes[lane][activeNotesInLane[lane]].y = -height; // spawn at the top of the screen
         notes[lane][activeNotesInLane[lane]].height = height;
         notes[lane][activeNotesInLane[lane]].color = color;
-        notes[lane][activeNotesInLane[lane]].hit = false; // not hit yet
+        notes[lane][activeNotesInLane[lane]].hit = false;       // not hit yet
         notes[lane][activeNotesInLane[lane]].sustain = sustain; // not a sustained note (long press note)
         activeNotesInLane[lane]++;
+        draw_piano(lane, 1); // draw the key on the screen
     }
 }
 
 /**
  * @brief Draws the falling notes
- * @param erase 1 to erase the notes at their top edge, 2 to erase the note at the bottom edge, 3 to erase the whole note, 0 to draw them 
+ * @param erase 1 to erase the notes at their top edge, 2 to erase the note at the bottom edge, 3 to erase the whole note, 0 to draw them
  */
 void draw_notes(int erase)
 {
-    int singleTrackWidth = trackWidth/numLanes;
+    int singleTrackWidth = trackWidth / numLanes;
     // Draws the falling notes -- lines in between the two outer lines dictated by numLines
     for (int i = 0; i < numLanes; i++)
     {
@@ -231,18 +335,21 @@ void draw_notes(int erase)
             // Draw the note at its current position
             if (erase) // erase the note if needed
             {
-                if (erase == 1) { // erase only the top of the note that moved down
-                    fillRect(SCREEN_WIDTH/2 - trackWidth/2 + (i*trackWidth/numLanes) + noteSkinniness, notes[i][j].y, trackWidth/numLanes-noteSkinniness, gravity, BLACK); // erase the top of the note that moved down
+                if (erase == 1)
+                {                                                                                                                                                                      // erase only the top of the note that moved down
+                    fillRect(SCREEN_WIDTH / 2 - trackWidth / 2 + (i * trackWidth / numLanes) + noteSkinniness, notes[i][j].y, trackWidth / numLanes - noteSkinniness, gravity, BLACK); // erase the top of the note that moved down
                 }
-                else  {// erase only the whole note
-                    fillRect(SCREEN_WIDTH/2 - trackWidth/2 + (i*trackWidth/numLanes) + noteSkinniness, notes[i][j].y, trackWidth/numLanes-noteSkinniness, notes[i][j].height, BLACK); // erase the whole note, subtract 10 to make it look better
+                else
+                {                                                                                                                                                                                 // erase only the whole note
+                    fillRect(SCREEN_WIDTH / 2 - trackWidth / 2 + (i * trackWidth / numLanes) + noteSkinniness, notes[i][j].y, trackWidth / numLanes - noteSkinniness, notes[i][j].height, BLACK); // erase the whole note, subtract 10 to make it look better
                 }
             }
-            else {
+            else
+            {
                 // FOR PIANO THIS IS FINE BUT FOR DRUM WE WILL NEED TO DELETE THE WHOLE NOTE ONCE IT IS HIT
-                // if (!notes[i][j].hit) { // dont move the note down if its been hit 
+                // if (!notes[i][j].hit) { // dont move the note down if its been hit
                 // fillRect(SCREEN_WIDTH/2 - trackWidth/2 + (i*singleTrackWidth), notes[i][j].y, singleTrackWidth-5, notes[i][j].height, notes[i][j].color); // draw the whole note
-                    fillRect(SCREEN_WIDTH/2 - trackWidth/2 + (i*trackWidth/numLanes) + noteSkinniness, notes[i][j].y + max(notes[i][j].height - gravity, 0), trackWidth/numLanes-noteSkinniness, gravity, notes[i][j].color); // draw the bottom of the note that moved down
+                fillRect(SCREEN_WIDTH / 2 - trackWidth / 2 + (i * trackWidth / numLanes) + noteSkinniness, notes[i][j].y + max(notes[i][j].height - gravity, 0), trackWidth / numLanes - noteSkinniness, gravity, notes[i][j].color); // draw the bottom of the note that moved down
                 // }
                 printf("Note %d in lane %d at y = %f, height = %d, hit_satus = %d\n", j, i, notes[i][j].y, notes[i][j].height, notes[i][j].hit); // print the note position for debugging
             }
@@ -257,18 +364,25 @@ void draw_notes(int erase)
  */
 void erase_note(int lane, int noteIndex)
 {
-    int singleTrackWidth = trackWidth/numLanes;
+    int singleTrackWidth = trackWidth / numLanes;
     // Erase the note at its current position
     // fillRect(SCREEN_WIDTH/2 - trackWidth/2 + (lane*singleTrackWidth) + noteSkinniness/2, notes[lane][noteIndex].y + notes[lane][noteIndex].height - gravity, singleTrackWidth-noteSkinniness, gravity, BLACK);  // erase the bottom of the note that moved down
-    if (!notes[lane][noteIndex].sustain) {fillRect(SCREEN_WIDTH/2 - trackWidth/2 + (lane*trackWidth/numLanes) + noteSkinniness, notes[lane][noteIndex].y, trackWidth/numLanes-noteSkinniness, notes[lane][noteIndex].height, BLACK);} // erase the whole note if it is not a sustained note
+    if (!notes[lane][noteIndex].sustain)
+    {
+        fillRect(SCREEN_WIDTH / 2 - trackWidth / 2 + (lane * trackWidth / numLanes) + noteSkinniness, notes[lane][noteIndex].y, trackWidth / numLanes - noteSkinniness, notes[lane][noteIndex].height, BLACK);
+    } // erase the whole note if it is not a sustained note
     activeNotesInLane[lane]--;
     notes[lane][noteIndex] = notes[lane][activeNotesInLane[lane]]; // Move the last note to the current position
+    if (activeNotesInLane[lane] <= 0) {
+        draw_piano(lane, 0); // draw the key on the screen
+    }
 }
 
 /**
  * @brief returns if the note is in the hit area
  */
-bool check_hit(note noteObj) {
+bool check_hit(note noteObj)
+{
     return ((noteObj.y + noteObj.height) > (SCREEN_HEIGHT - hitHeight)) && ((noteObj.y + noteObj.height) < (SCREEN_HEIGHT - hitHeight + hitWidth));
 }
 
@@ -281,26 +395,32 @@ void update_notes()
     // Update the falling notes -- move them down the screen
     for (int i = 0; i < numLanes; i++)
     {
-        for (int j = activeNotesInLane[i]-1; j >= 0; j--)
+        for (int j = activeNotesInLane[i] - 1; j >= 0; j--)
         {
             // Move the note down the screen
             notes[i][j].y += gravity;
 
+            // if the bottom of the note is outside the hit area, make it smaller
+            if ((notes[i][j].y + notes[i][j].height) > (SCREEN_HEIGHT - hitHeight + hitWidth))
+            {
+                notes[i][j].height -= gravity; // make the note smaller
+            }
+
             // If the note is off the screen, remove it from the lane
-            if (notes[i][j].y > SCREEN_HEIGHT)
+            if (notes[i][j].y > SCREEN_HEIGHT - hitHeight + hitWidth)
             {
                 // Remove the note from the lane
                 erase_note(i, j);
                 numNotesMissed++; // increment the number of notes missed
-                combo = 0; // reset the combo counter
-                continue; // skip the rest of the loop
+                combo = 0;        // reset the combo counter
+                continue;         // skip the rest of the loop
             }
 
             // If the note has been hit, make it smaller
             if (notes[i][j].hit)
             {
-                numNotesHit++; // increment the number of notes hit
-                notes[i][j].height -= gravity; // make the note smaller
+                numNotesHit++;                                         // increment the number of notes hit
+                notes[i][j].height -= gravity;                         // make the note smaller
                 if (notes[i][j].height <= 0 || (!notes[i][j].sustain)) // if the note is gone, remove it from the lane
                 {
                     erase_note(i, j);
@@ -316,18 +436,22 @@ void update_notes()
 static PT_THREAD(protothread_spawn_notes(struct pt *pt))
 {
     PT_BEGIN(pt);
-    const int maxHeight = SCREEN_HEIGHT/4; // max height of the note
+    const int maxHeight = SCREEN_HEIGHT / 4; // max height of the note
     while (1)
     {
         // Spawn notes every 100ms
         int lane = rand() % numLanes; // Random lane
-        int color = rand() % 16; // Random color
+        int color = rand() % 16;      // Random color
         // int height = rand() % (maxHeight); // Random height
         int sustain = rand() % 2; // Random sustain (0 or 1)
-        int height = hitWidth; // Fixed height for now
-        if (sustain) {color = YELLOW; height = 2*hitWidth;}
+        int height = hitWidth;    // Fixed height for now
+        if (sustain)
+        {
+            color = YELLOW;
+            height = 2 * hitWidth;
+        }
         spawn_note(lane, color, height, sustain);
-        PT_YIELD_usec(750000/2); // Yield for 100ms
+        PT_YIELD_usec(750000 / 2); // Yield for 100ms
     }
 
     PT_END(pt);
@@ -350,24 +474,24 @@ static PT_THREAD(protothread_animation_loop(struct pt *pt))
 
     while (1)
     {
-    draw_notes(1);
-    update_notes();
-    draw_notes(0);
-    draw_hitLine();
+        draw_notes(1);
+        update_notes();
+        draw_notes(0);
+        draw_hitLine();
 
-    setCursor(130, 10);
-    sprintf(notesTextBuffer, "%d", numNotesHit);
-    writeString(notesTextBuffer);
+        setCursor(130, 10);
+        sprintf(notesTextBuffer, "%d", numNotesHit);
+        writeString(notesTextBuffer);
 
-    setCursor(170, 25);
-    sprintf(notesTextBuffer, "%d", numNotesMissed);
-    writeString(notesTextBuffer);
+        setCursor(170, 25);
+        sprintf(notesTextBuffer, "%d", numNotesMissed);
+        writeString(notesTextBuffer);
 
-    setCursor(80, 40);
-    sprintf(notesTextBuffer, "%d", combo);
-    writeString(notesTextBuffer);
+        setCursor(80, 40);
+        sprintf(notesTextBuffer, "%d", combo);
+        writeString(notesTextBuffer);
 
-    PT_YIELD_usec(30000); // Yield for 30ms
+        PT_YIELD_usec(30000); // Yield for 30ms
     }
 
     PT_END(pt);
@@ -392,51 +516,62 @@ int prev_key = -1;
 int key_pressed = 0;
 
 void key_pressed_callback(int key); // forward declaration of the key callback function
-void key_released_callback(); // forward declaration of the key released callback function
+void key_released_callback();       // forward declaration of the key released callback function
 
 // ===========================================
 // ============= KEYPAD CODE ================
 // ===========================================
-static PT_THREAD(protothread_keypad_scan(struct pt *pt)) {
+static PT_THREAD(protothread_keypad_scan(struct pt *pt))
+{
     // Initialize protothread and parameters
     PT_BEGIN(pt);
     static int i;
     static uint32_t keypad;
 
     // Main loop to handle keypad input
-    while (1) {
+    while (1)
+    {
         // Scan the keypad for a keypress
-        for (i = 0; i < KEYROWS; i++) {
+        for (i = 0; i < KEYROWS; i++)
+        {
             gpio_put_masked((0xF << BASE_KEYPAD_PIN), (scancodes[i] << BASE_KEYPAD_PIN));
             sleep_us(1);
             keypad = ((gpio_get_all() >> BASE_KEYPAD_PIN) & 0x7F);
-            if (keypad & button) break;
+            if (keypad & button)
+                break;
         }
         // If a key is pressed, find the key code
-        if (keypad & button) {
-            for (i = 0; i < NUMKEYS; i++) {
-                if (keypad == keycodes[i]) break;
+        if (keypad & button)
+        {
+            for (i = 0; i < NUMKEYS; i++)
+            {
+                if (keypad == keycodes[i])
+                    break;
             }
-            if (i == NUMKEYS) (i = -1);
-        } 
+            if (i == NUMKEYS)
+                (i = -1);
+        }
         // If no key is pressed, set i to -1
-        else {
+        else
+        {
             i = -1;
         }
 
         // If a new key is pressed, "i" will be different than "prev_key"
         // if (i != prev_key) {
 
-            // blink the LED if a key is pressed
-            if (i != -1 && prev_key == i) {
-                key_pressed_callback(i); // Call the key callback function
-                key_pressed = 1;
-            }
-            else if (prev_key != i && key_pressed) {
-                key_released_callback(prev_key); // Call the key released callback function
-                key_pressed = 0;
-            }
-            prev_key = i;
+        // blink the LED if a key is pressed
+        if (i != -1 && prev_key == i)
+        {
+            key_pressed_callback(i); // Call the key callback function
+            key_pressed = 1;
+        }
+        else if (prev_key != i && key_pressed)
+        {
+            key_released_callback(prev_key); // Call the key released callback function
+            key_pressed = 0;
+        }
+        prev_key = i;
         // }
         // Yield for 30ms
         PT_YIELD_usec(30000);
@@ -450,10 +585,15 @@ static PT_THREAD(protothread_keypad_scan(struct pt *pt)) {
  */
 void key_pressed_callback(int key)
 {
-    key = key -1; // convert to 0-indexed key
+    key = key - 1; // convert to 0-indexed key
     // Check if the key pressed is valid
     if (key >= 0 && key < numLanes)
     {
+        // Make key pressed true
+        pianoKeysPressed[key] = true;
+        // Draw the key pressed on the screen
+        draw_piano(key, 0); // draw the piano keys on the screen
+        
         // Check if there are any notes in the lane
         if (activeNotesInLane[key] > 0)
         {
@@ -468,8 +608,8 @@ void key_pressed_callback(int key)
                 if (check_hit(noteKey))
                 {
                     notes[key][i].hit = true; // mark the note as hit
-                    play_sound(); // play sound
-                    combo++; // increment the combo counter
+                    play_sound();             // play sound
+                    combo++;                  // increment the combo counter
                 }
             }
         }
@@ -481,10 +621,16 @@ void key_pressed_callback(int key)
  */
 void key_released_callback(int key)
 {
-    key = key -1; // convert to 0-indexed key
+    key = key - 1; // convert to 0-indexed key
     // Check if the key pressed is valid
     if (key >= 0 && key < numLanes)
     {
+        // Make key pressed false
+        pianoKeysPressed[key] = false;
+        // Draw the key pressed on the screen
+        draw_piano(key, 0); // draw the piano keys on the screen
+        printf("Key released: %d\n", key); // Print the key released for debugging
+        
         // Check if there are any notes in the lane
         if (activeNotesInLane[key] > 0)
         {
@@ -498,7 +644,7 @@ void key_released_callback(int key)
                 // Check if the note is in the correct position
                 // if (check_hit(noteKey))
                 // {
-                    notes[key][i].hit = false; // mark the note as hit
+                notes[key][i].hit = false; // mark the note as hit
                 // }
             }
         }
@@ -512,7 +658,8 @@ void key_released_callback(int key)
 // ===========================================
 // =============== LED BLINKY ================
 // ===========================================
-static PT_THREAD(protothread_blinky(struct pt *pt)) {
+static PT_THREAD(protothread_blinky(struct pt *pt))
+{
     // used to tell if the program is running
 
     // Initialize protothread and parameters
@@ -520,7 +667,8 @@ static PT_THREAD(protothread_blinky(struct pt *pt)) {
     static int i = 0;
 
     // Main loop to blink the LED
-    while (1) {
+    while (1)
+    {
         // Blink the LED every 50ms
         gpio_put(LED, i % 2);
         i++;
@@ -625,7 +773,7 @@ int main()
     // Add core 0 threads
     pt_add_thread(protothread_animation_loop);
     pt_add_thread(protothread_spawn_notes);
-    pt_add_thread(protothread_blinky);
+    // pt_add_thread(protothread_blinky);
     pt_add_thread(protothread_keypad_scan);
     // Start scheduling core 0 threads
     pt_schedule_start;
