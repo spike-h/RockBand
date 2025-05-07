@@ -57,6 +57,7 @@
 #include "menubg.h"
 // include dac header
 #include "amplitude_envelope_piano.h"
+#include "amplitude_envelope_mario.h"
 
 // === the fixed point macros ========================================
 typedef signed int fix15;
@@ -120,6 +121,7 @@ const uint32_t transfer_count = sine_table_size;
 // initializing dma channels
 int data_chan;
 int ctrl_chan;
+dma_channel_config c2;
 
 void play_sound()
 {
@@ -131,6 +133,45 @@ void play_sound()
         // dma_channel_wait_for_finish_blocking(ctrl_chan);
         dma_start_channel_mask(1u << ctrl_chan);
     }
+}
+
+void play_mario_death()
+{
+    dma_channel_abort(data_chan); // abort the current transfer
+    dma_channel_abort(ctrl_chan); // abort the current transfer
+
+    // stop ping ponging
+    channel_config_set_chain_to(&c2, data_chan); // Chain to control channel COMMENT OUT TO PREVENT LOOPING
+    // reconfigure Dma channel to play mario instead
+    dma_channel_configure(
+        data_chan,                 // Channel to be configured
+        &c2,                       // The configuration we just created
+        &spi_get_hw(SPI_PORT)->dr, // write address (SPI data register)
+        DAC_data_mario,                  // The initial read address
+        59806,                       // Number of transfers
+        false                      // Don't start immediately.
+    );
+
+    // Start the DMA channel
+    dma_start_channel_mask(1u << data_chan);
+
+    // wait for the DMA channel to finish
+    dma_channel_wait_for_finish_blocking(data_chan);
+
+    // write stuff to screen
+    fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, RED); // clear the screen
+
+    // bring back original config
+    // stop ping ponging
+    channel_config_set_chain_to(&c2, ctrl_chan); // Chain to control channel COMMENT OUT TO PREVENT LOOPING
+    dma_channel_configure(
+        data_chan,                 // Channel to be configured
+        &c2,                       // The configuration we just created
+        &spi_get_hw(SPI_PORT)->dr, // write address (SPI data register)
+        DAC_data,                  // The initial read address
+        transfer_count,            // Number of transfers
+        false                      // Don't start immediately.
+    );
 }
 
 // ================================================================================================================
@@ -150,6 +191,7 @@ static PT_THREAD(protothread_animation_loop(struct pt *pt));
 int menu_state = 0; // 0 = main menu, 1 = game, 2 = credits
 int menu_selection = 0; // 0 = play endless, 1 = play song with lives, 2 = play song with no lives, 3 = credits
 int current_menu_selection = 0; // current menu selection
+int lives = -1;
 
 // draw the main menu
 void draw_menu()
@@ -188,6 +230,7 @@ void draw_cursor(int erase)
 // ===== menu loop ===========
 // ===========================
 
+static struct pt child_pt; // Declare a protothread control structure for the child for animation loop
 // create a thread for the menu
 static PT_THREAD(protothread_menu_screen(struct pt *pt))
 {
@@ -196,13 +239,15 @@ static PT_THREAD(protothread_menu_screen(struct pt *pt))
     draw_menu();
     draw_cursor(0); // draw the cursor on the screen
     // Wait for a button press to select a menu option
-    while (menu_state != 1)
+    while (1)
     {
         PT_YIELD_usec(30000); // wait for 30ms  
         if (menu_state == 1)
         {
-            static struct pt child_pt; // Declare a protothread control structure for the child
             PT_SPAWN(pt, &child_pt, protothread_animation_loop(&child_pt));
+            // Wait for the animation loop to finish before continuing
+            menu_state = 0; // reset the menu state
+            draw_menu();
         }
         // PT_YIELD(pt); // yield to other threads
     }
@@ -507,6 +552,36 @@ void update_notes()
                 {
                     maxCombo = combo; // update the max combo counter
                 }
+                if (lives != -1) // if we are playing a song with lives
+                {
+                    lives--; // decrement the number of lives
+                    if (lives == 2) {
+                        drawCharBig(50, 70, 0x14, WHITE, BLACK); // erase last heart
+                    } 
+                    if (lives == 1) {
+                        drawCharBig(30, 70, 0x14, WHITE, BLACK); // erase last heart
+                    }
+                    if (lives == 0) {
+                        drawCharBig(10, 70, 0x14, WHITE, BLACK); // erase last heart
+                    }
+                    
+                    if (lives == 0)
+                    {
+                        play_mario_death(); // play the death sound
+                        menu_state = 0; // go back to the main menu
+                        // stop dma channel
+                        dma_channel_abort(data_chan); // abort the channel
+                        dma_channel_abort(ctrl_chan); // abort the channel
+                        return;         // return to the main menu
+                    }
+                }
+
+                // write perfect on the screen
+                setCursor(SCREEN_WIDTH-100, 10);
+                setTextColor2(WHITE, BLACK);
+                setTextSize(2);
+                writeString("MISS!!!");
+
                 continue;         // skip the rest of the loop
             }
 
@@ -572,7 +647,15 @@ static PT_THREAD(protothread_animation_loop(struct pt *pt))
     // spawn_note(1, GREEN, 50);
     // spawn_note(2, BLUE, 50);
 
-    while (1)
+    if (lives != -1) // if we are playing a song with lives
+    {
+        // write using big font
+        drawCharBig(10, 70, 0x14, RED, RED); // draw the letter L on the screen
+        drawCharBig(30, 70, 0x14, RED, RED); // draw the letter L on the screen
+        drawCharBig(50, 70, 0x14, RED, RED); // draw the letter L on the screen
+    }
+
+    while (menu_state == 1)
     {
         draw_notes(1);
         update_notes();
@@ -591,13 +674,20 @@ static PT_THREAD(protothread_animation_loop(struct pt *pt))
         sprintf(notesTextBuffer, "%d", combo);
         writeString(notesTextBuffer);
 
-        setCursor(120, 55);
+        setCursor(130, 55);
         sprintf(notesTextBuffer, "%d", maxCombo);
         writeString(notesTextBuffer);
 
+        if (lives == 0) {
+            // kill animation thread
+            // draw_menu();
+            PT_EXIT(&child_pt); // kill the animation thread
+        }
+
         PT_YIELD_usec(30000); // Yield for 30ms
     }
-
+    draw_menu();
+    PT_EXIT(&child_pt); // kill the animation thread
     PT_END(pt);
 }
 
@@ -726,6 +816,7 @@ void key_released_callback(int key)
             else if (menu_selection == 1)
             {
                 menu_state = 1; // Start the game with lives
+                lives = 3;
                 draw_background(); // Draw the background for the game
                 draw_hitLine();    // Draw the hit line for the game
                 pt_add_thread(protothread_animation_loop); // Add the animation loop thread to the protothread scheduler
@@ -792,6 +883,30 @@ void key_pressed_callback_game(int key)
                     notes[key][i].hit = true; // mark the note as hit
                     play_sound();             // play sound
                     combo++;                  // increment the combo counter
+                    if (abs(notes[key][i].y + notes[key][i].height - (SCREEN_HEIGHT - hitHeight + hitWidth)) < 20) // if the note is hit perfectly
+                    {
+                        // write perfect on the screen
+                        setCursor(SCREEN_WIDTH-100, 10);
+                        setTextColor2(WHITE, BLACK);
+                        setTextSize(2);
+                        writeString("PERFECT!");
+                    }
+                    else if (abs(notes[key][i].y + notes[key][i].height - (SCREEN_HEIGHT - hitHeight + hitWidth)) < 30) // if the note is hit well
+                    {
+                        // write GOOD on the screen
+                        setCursor(SCREEN_WIDTH-100, 10);
+                        setTextColor2(WHITE, BLACK);
+                        setTextSize(2);
+                        writeString("GOOD!");
+                    }
+                    else // if the note is hit poorly
+                    {
+                        // write GOOD on the screen
+                        setCursor(SCREEN_WIDTH-100, 10);
+                        setTextColor2(WHITE, BLACK);
+                        setTextSize(2);
+                        writeString("BAD!");
+                    }
                 }
             }
         }
@@ -912,7 +1027,7 @@ int main()
     );
 
     // Setup the data channel
-    dma_channel_config c2 = dma_channel_get_default_config(data_chan); // Default configs
+    c2 = dma_channel_get_default_config(data_chan); // Default configs
     channel_config_set_transfer_data_size(&c2, DMA_SIZE_16);           // 16-bit txfers
     channel_config_set_read_increment(&c2, true);                      // yes read incrementing
     channel_config_set_write_increment(&c2, false);                    // no write incrementing
