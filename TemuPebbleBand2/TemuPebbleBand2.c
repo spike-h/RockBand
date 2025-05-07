@@ -54,7 +54,7 @@
 // include picture header
 #include "zarif.h"
 // include dac header
-#include "amplitude_envelope_mario.h"
+#include "amplitude_envelope_piano.h"
 
 // === the fixed point macros ========================================
 typedef signed int fix15;
@@ -81,7 +81,6 @@ typedef signed int fix15;
 #define FRAME_RATE 33000
 
 // DAC Pins
-#define PIN_MISO 4
 #define PIN_CS 5
 #define PIN_SCK 6
 #define PIN_MOSI 7
@@ -693,7 +692,7 @@ int main()
     spi_set_format(SPI_PORT, 16, 0, 0, 0);
 
     // Map SPI signals to GPIO ports
-    gpio_set_function(PIN_MISO, GPIO_FUNC_SPI);
+    // gpio_set_function(PIN_MISO, GPIO_FUNC_SPI);
     gpio_set_function(PIN_SCK, GPIO_FUNC_SPI);
     gpio_set_function(PIN_MOSI, GPIO_FUNC_SPI);
     gpio_set_function(PIN_CS, GPIO_FUNC_SPI);
@@ -740,7 +739,10 @@ int main()
     // 0x3b means timer0 (see SDK manual)
     channel_config_set_dreq(&c2, 0x3b); // DREQ paced by timer 0
     // chain to the controller DMA channel
-    // channel_config_set_chain_to(&c2, ctrl_chan); // Chain to control channel
+    
+    // VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+    channel_config_set_chain_to(&c2, ctrl_chan); // Chain to control channel COMMENT OUT TO PREVENT LOOPING
+    // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
     dma_channel_configure(
         data_chan,                 // Channel to be configured
