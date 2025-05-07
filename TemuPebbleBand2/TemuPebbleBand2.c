@@ -53,6 +53,8 @@
 #include "pt_cornell_rp2040_v1_3.h"
 // include picture header
 #include "zarif.h"
+#include "arnav.h"
+#include "menubg.h"
 // include dac header
 #include "amplitude_envelope_piano.h"
 
@@ -122,11 +124,13 @@ int ctrl_chan;
 void play_sound()
 {
     // *thunk*
-    if (dma_channel_is_busy(data_chan))
+    if (!(dma_channel_is_busy(data_chan) || dma_channel_is_busy(ctrl_chan)))
     {
-        dma_channel_wait_for_finish_blocking(ctrl_chan);
+        // Wait for the DMA channel to finish before starting a new transfer
+        // dma_channel_wait_for_finish_blocking(data_chan);
+        // dma_channel_wait_for_finish_blocking(ctrl_chan);
+        dma_start_channel_mask(1u << ctrl_chan);
     }
-    dma_start_channel_mask(1u << ctrl_chan);
 }
 
 // ================================================================================================================
@@ -137,11 +141,96 @@ void play_sound()
 // ======================================  BEGIN ANIMATION CODE ===================================================
 // ================================================================================================================
 
+// ===============================
+// =======  menu code ============
+// ===============================
+static PT_THREAD(protothread_animation_loop(struct pt *pt));
+
+// Menu state variables
+int menu_state = 0; // 0 = main menu, 1 = game, 2 = credits
+int menu_selection = 0; // 0 = play endless, 1 = play song with lives, 2 = play song with no lives, 3 = credits
+int current_menu_selection = 0; // current menu selection
+
+// draw the main menu
+void draw_menu()
+{
+    // fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, BLACK); // clear the screen
+    drawPicture(0, 0, (unsigned short *)vga_menu_image, 640, 480); // Draw the picture on the screen
+    setTextColor2(WHITE, BLACK);
+    setTextSize(2);
+    setCursor(100, 320);
+    writeString("Play Endless");
+    setCursor(100, 360);
+    writeString("Play Song with Lives");
+    setCursor(100, 400);
+    writeString("Play Song with all 12 lanes");
+    setCursor(100, 440);
+    writeString("Credits");
+}
+
+// draw cursor on the menu given the current menu selection
+void draw_cursor(int erase)
+{
+    // Draw the cursor on the screen
+    int x = 80; // x position of the cursor
+    int y = 320 + (menu_selection * 40); // y position of the cursor
+    if (erase)
+    {
+        fillRect(x, y, 10, 10, BLACK); // erase the cursor on the screen
+    }
+    else
+    {
+        fillRect(x, y, 10, 10, WHITE); // draw the cursor on the screen
+    }
+}
+
+// ===========================
+// ===== menu loop ===========
+// ===========================
+
+// create a thread for the menu
+static PT_THREAD(protothread_menu_screen(struct pt *pt))
+{
+    PT_BEGIN(pt); // begin the thread
+    // Draw the menu on the screen
+    draw_menu();
+    draw_cursor(0); // draw the cursor on the screen
+    // Wait for a button press to select a menu option
+    while (menu_state != 1)
+    {
+        PT_YIELD_usec(30000); // wait for 30ms  
+        if (menu_state == 1)
+        {
+            static struct pt child_pt; // Declare a protothread control structure for the child
+            PT_SPAWN(pt, &child_pt, protothread_animation_loop(&child_pt));
+        }
+        // PT_YIELD(pt); // yield to other threads
+    }
+    PT_END(pt); // end the thread
+}
+
+void draw_credits()
+{
+    // Draw the credits on the screen
+    fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, BLACK); // clear the screen
+    setTextColor2(WHITE, BLACK);
+    setTextSize(2);
+    setCursor(50, 100);
+    writeString("Credits");
+    setCursor(50, 140);
+    writeString("Made by: Spike Hofflich, Paige Shelton, Edwin Chen");
+    setCursor(50, 180);
+    writeString("Music by: erm we gotta find that out");
+    setCursor(50, 220);
+    writeString("Press any button to go back to the main menu");
+}
+
 const int trackWidth = SCREEN_WIDTH / 3; // total width of the track
 const int whiteHeight = 120;            // height of the white key
 const int hitHeight = whiteHeight + 80;               // top height of the hit line from above the bottom of the screen
 const int hitWidth = 40;                 // how tall the hit line is (hittable area)
 int combo = 0;                           // combo counter for the number of notes hit in a row
+int maxCombo = 0;                       // max combo counter for the number of notes hit in a row
 
 typedef struct note
 {
@@ -157,7 +246,7 @@ typedef struct note
 #define numLanes 4                                                 // number of lanes
 volatile note notes[numLanes][50];                                   // 3 lanes of notes, 50 is the max number of notes in each lane at a single time (arbitary large number)
 volatile int activeNotesInLane[numLanes];                            // number of notes in each lane
-const int gravity = 20;                                              // The speed at which the notes fall -- can be changed to make it harder or easier
+const int gravity = 10;                                              // The speed at which the notes fall -- can be changed to make it harder or easier
 const int noteSkinniness = 2;                                        // offset for the notes to make them look better and be in the center of the lane
 volatile int numNotesHit = 0;                                        // number of notes hit
 volatile int numNotesMissed = 0;                                     // number of notes missed
@@ -190,6 +279,8 @@ void draw_background()
     writeString("Notes Missed: ");
     setCursor(10, 40);
     writeString("Combo: ");
+    setCursor(10, 55);
+    writeString("Max Combo: ");
 
     // Draw a piano diagram on the screen
     for (int i = 0; i < numLanes; i++)
@@ -412,6 +503,10 @@ void update_notes()
                 erase_note(i, j);
                 numNotesMissed++; // increment the number of notes missed
                 combo = 0;        // reset the combo counter
+                if (maxCombo < combo)
+                {
+                    maxCombo = combo; // update the max combo counter
+                }
                 continue;         // skip the rest of the loop
             }
 
@@ -438,6 +533,10 @@ static PT_THREAD(protothread_spawn_notes(struct pt *pt))
     const int maxHeight = SCREEN_HEIGHT / 4; // max height of the note
     while (1)
     {
+        while (menu_state != 1)
+        {
+            PT_YIELD_usec(100000); // Yield for 100ms
+        }
         // Spawn notes every 100ms
         int lane = rand() % numLanes; // Random lane
         int color = rand() % 16;      // Random color
@@ -450,7 +549,7 @@ static PT_THREAD(protothread_spawn_notes(struct pt *pt))
             height = 2 * hitWidth;
         }
         spawn_note(lane, color, height, sustain);
-        PT_YIELD_usec(750000 / 2); // Yield for 100ms
+        PT_YIELD_usec(750000); // Yield for 100ms
     }
 
     PT_END(pt);
@@ -462,8 +561,10 @@ static PT_THREAD(protothread_spawn_notes(struct pt *pt))
 static PT_THREAD(protothread_animation_loop(struct pt *pt))
 {
     PT_BEGIN(pt);
-    char notesTextBuffer[4];
 
+    char notesTextBuffer[4];
+    pt_add_thread(protothread_spawn_notes);
+    drawPicture(-250, 0, (unsigned short *)vga_arnav_image, 640, 480); // Draw the picture on the screen
     drawPicture(160, 0, (unsigned short *)vga_image, 640, 480); // Draw the picture on the screen
     draw_background();
     // Spawn notes
@@ -488,6 +589,10 @@ static PT_THREAD(protothread_animation_loop(struct pt *pt))
 
         setCursor(80, 40);
         sprintf(notesTextBuffer, "%d", combo);
+        writeString(notesTextBuffer);
+
+        setCursor(120, 55);
+        sprintf(notesTextBuffer, "%d", maxCombo);
         writeString(notesTextBuffer);
 
         PT_YIELD_usec(30000); // Yield for 30ms
@@ -520,6 +625,12 @@ void key_released_callback();       // forward declaration of the key released c
 // ===========================================
 // ============= KEYPAD CODE ================
 // ===========================================
+
+void key_pressed_callback_game(int key); // forward declaration of the key callback function
+void key_released_callback_game(int key); // forward declaration of the key released callback function
+void key_pressed_callback(int key); // forward declaration of the key callback function
+void key_released_callback(int key); // forward declaration of the key released callback function
+
 static PT_THREAD(protothread_keypad_scan(struct pt *pt))
 {
     // Initialize protothread and parameters
@@ -580,9 +691,81 @@ static PT_THREAD(protothread_keypad_scan(struct pt *pt))
 }
 
 /**
+ * @brief callback for key release
+ */
+void key_released_callback(int key)
+{
+    // printf("Key released: %d\n", prev_key); // Print the key released for debugging
+    if (menu_state == 1) // if we are in the game
+    {
+        key_released_callback_game(key); // Call the key released callback function
+    }
+    else if (menu_state == 0) // if we are in the menu
+    {
+        if (key == 1)
+        {
+            draw_cursor(1); // erase the cursor on the screen
+            menu_selection = (menu_selection + 1) % 4; // Move down the menu
+            draw_cursor(0); // draw the cursor on the screen
+        }
+        else if (key == 2)
+        {
+            draw_cursor(1); // erase the cursor on the screen
+            menu_selection = (menu_selection - 1 + 4) % 4; // Move up the menu
+            draw_cursor(0); // draw the cursor on the screen
+        }
+        else if (key == 3)
+        {
+            if (menu_selection == 0)
+            {
+                menu_state = 1; // Start the game
+                draw_background(); // Draw the background for the game
+                draw_hitLine();    // Draw the hit line for the game
+                pt_add_thread(protothread_animation_loop); // Add the animation loop thread to the protothread scheduler
+            }
+            else if (menu_selection == 1)
+            {
+                menu_state = 1; // Start the game with lives
+                draw_background(); // Draw the background for the game
+                draw_hitLine();    // Draw the hit line for the game
+                pt_add_thread(protothread_animation_loop); // Add the animation loop thread to the protothread scheduler
+            }
+            else if (menu_selection == 2)
+            {
+                menu_state = 1; // Start the game with 12 lanes
+                draw_background(); // Draw the background for the game
+                draw_hitLine();    // Draw the hit line for the game
+                pt_add_thread(protothread_animation_loop); // Add the animation loop thread to the protothread scheduler
+            }
+            else if (menu_selection == 3)
+            {
+                menu_state = 2; // Show credits
+                draw_credits(); // Draw the credits on the screen
+            }
+        }
+    }
+    else if (menu_state == 2) // if we are in the credits
+    {
+        menu_state = 0; // Go back to the main menu
+        draw_menu();    // Draw the main menu
+    }
+}
+
+/**
  * @brief callback for key press
  */
 void key_pressed_callback(int key)
+{
+    if (menu_state == 1) // if we are in the game
+    {
+        key_pressed_callback_game(key); // Call the key callback function
+    }
+}
+
+/**
+ * @brief callback for key press while playing the game
+ */
+void key_pressed_callback_game(int key)
 {
     key = key - 1; // convert to 0-indexed key
     // Check if the key pressed is valid
@@ -616,9 +799,9 @@ void key_pressed_callback(int key)
 }
 
 /**
- * @brief callback for key release
+ * @brief callback for key release while playing the game
  */
-void key_released_callback(int key)
+void key_released_callback_game(int key)
 {
     key = key - 1; // convert to 0-indexed key
     // Check if the key pressed is valid
@@ -739,7 +922,7 @@ int main()
     // 0x3b means timer0 (see SDK manual)
     channel_config_set_dreq(&c2, 0x3b); // DREQ paced by timer 0
     // chain to the controller DMA channel
-    
+
     // VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
     channel_config_set_chain_to(&c2, ctrl_chan); // Chain to control channel COMMENT OUT TO PREVENT LOOPING
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -773,8 +956,8 @@ int main()
     gpio_pull_down((BASE_KEYPAD_PIN + 6));
 
     // Add core 0 threads
-    pt_add_thread(protothread_animation_loop);
-    pt_add_thread(protothread_spawn_notes);
+    // pt_add_thread(protothread_animation_loop);
+    pt_add_thread(protothread_menu_screen);
     // pt_add_thread(protothread_blinky);
     pt_add_thread(protothread_keypad_scan);
     // Start scheduling core 0 threads
