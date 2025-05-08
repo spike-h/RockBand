@@ -52,8 +52,7 @@
 // Include protothreads
 #include "pt_cornell_rp2040_v1_3.h"
 // include picture header
-#include "zarif.h"
-#include "arnav.h"
+#include "gamebg.h"
 #include "menubg.h"
 // include dac header
 #include "amplitude_envelope_piano.h"
@@ -230,30 +229,6 @@ void draw_cursor(int erase)
 // ===== menu loop ===========
 // ===========================
 
-static struct pt child_pt; // Declare a protothread control structure for the child for animation loop
-// create a thread for the menu
-static PT_THREAD(protothread_menu_screen(struct pt *pt))
-{
-    PT_BEGIN(pt); // begin the thread
-    // Draw the menu on the screen
-    draw_menu();
-    draw_cursor(0); // draw the cursor on the screen
-    // Wait for a button press to select a menu option
-    while (1)
-    {
-        PT_YIELD_usec(30000); // wait for 30ms  
-        if (menu_state == 1)
-        {
-            PT_SPAWN(pt, &child_pt, protothread_animation_loop(&child_pt));
-            // Wait for the animation loop to finish before continuing
-            menu_state = 0; // reset the menu state
-            draw_menu();
-        }
-        // PT_YIELD(pt); // yield to other threads
-    }
-    PT_END(pt); // end the thread
-}
-
 void draw_credits()
 {
     // Draw the credits on the screen
@@ -297,6 +272,7 @@ volatile int numNotesHit = 0;                                        // number o
 volatile int numNotesMissed = 0;                                     // number of notes missed
 const bool pianoKeyTypes[13] = {1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1}; // 1 is a white key 0 is black -- used for drawing the piano keys on the screen
 bool pianoKeysPressed[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+bool setup = false; // flag to check if the setup has been done
 
 void draw_piano(int lane, bool outline);
 
@@ -547,28 +523,22 @@ void update_notes()
                 // Remove the note from the lane
                 erase_note(i, j);
                 numNotesMissed++; // increment the number of notes missed
-                combo = 0;        // reset the combo counter
                 if (maxCombo < combo)
                 {
                     maxCombo = combo; // update the max combo counter
                 }
+                combo = 0; // reset the combo counter
                 if (lives != -1) // if we are playing a song with lives
                 {
                     lives--; // decrement the number of lives
-                    if (lives == 2) {
-                        drawCharBig(50, 70, 0x14, WHITE, BLACK); // erase last heart
-                    } 
-                    if (lives == 1) {
-                        drawCharBig(30, 70, 0x14, WHITE, BLACK); // erase last heart
-                    }
-                    if (lives == 0) {
-                        drawCharBig(10, 70, 0x14, WHITE, BLACK); // erase last heart
-                    }
+                    // erase the last heart on the screen 
+                    drawCharBig(10 + ((lives) * 20), 70, 0x14, WHITE, BLACK); // erase the last heart
                     
                     if (lives == 0)
                     {
                         play_mario_death(); // play the death sound
                         menu_state = 0; // go back to the main menu
+                        setup = false; // reset the setup flag
                         // stop dma channel
                         dma_channel_abort(data_chan); // abort the channel
                         dma_channel_abort(ctrl_chan); // abort the channel
@@ -632,62 +602,70 @@ static PT_THREAD(protothread_spawn_notes(struct pt *pt))
 
 // ========================================
 // ============ ANIMATION LOOP ============
-// ========================================a
+// ========================================
 static PT_THREAD(protothread_animation_loop(struct pt *pt))
 {
     PT_BEGIN(pt);
 
-    char notesTextBuffer[4];
-    pt_add_thread(protothread_spawn_notes);
-    drawPicture(-250, 0, (unsigned short *)vga_arnav_image, 640, 480); // Draw the picture on the screen
-    drawPicture(160, 0, (unsigned short *)vga_image, 640, 480); // Draw the picture on the screen
-    draw_background();
-    // Spawn notes
-    // spawn_note(0, RED, 50);
-    // spawn_note(1, GREEN, 50);
-    // spawn_note(2, BLUE, 50);
-
-    if (lives != -1) // if we are playing a song with lives
+    if (menu_state == 0)
     {
-        // write using big font
-        drawCharBig(10, 70, 0x14, RED, RED); // draw the letter L on the screen
-        drawCharBig(30, 70, 0x14, RED, RED); // draw the letter L on the screen
-        drawCharBig(50, 70, 0x14, RED, RED); // draw the letter L on the screen
-    }
-
-    while (menu_state == 1)
-    {
-        draw_notes(1);
-        update_notes();
-        draw_notes(0);
-        draw_hitLine();
-
-        setCursor(130, 10);
-        sprintf(notesTextBuffer, "%d", numNotesHit);
-        writeString(notesTextBuffer);
-
-        setCursor(170, 25);
-        sprintf(notesTextBuffer, "%d", numNotesMissed);
-        writeString(notesTextBuffer);
-
-        setCursor(80, 40);
-        sprintf(notesTextBuffer, "%d", combo);
-        writeString(notesTextBuffer);
-
-        setCursor(130, 55);
-        sprintf(notesTextBuffer, "%d", maxCombo);
-        writeString(notesTextBuffer);
-
-        if (lives == 0) {
-            // kill animation thread
-            // draw_menu();
-            PT_EXIT(&child_pt); // kill the animation thread
+        if (!setup) {
+            setup = true; // set the setup flag to true
+            draw_menu(); // Draw the menu on the screen
+            draw_cursor(0); // Draw the cursor on the screen
         }
-
-        PT_YIELD_usec(30000); // Yield for 30ms
     }
-    draw_menu();
-    PT_EXIT(&child_pt); // kill the animation thread
+    else if (menu_state == 2)
+    {
+        if (!setup) {
+            setup=true;
+            draw_credits(); // Draw the credits on the screen
+        }
+    }
+    else if (menu_state == 1)
+    {
+        if (!setup) {
+            setup=true;
+            pt_add_thread(protothread_spawn_notes);
+            drawPicture(0, 0, (unsigned short *)vga_image, 640, 480); // Draw the picture on the screen
+            draw_background();
+            // Spawn notes
+            // spawn_note(0, RED, 50);
+            // spawn_note(1, GREEN, 50);
+            // spawn_note(2, BLUE, 50);
+
+            if (lives != -1) // if we are playing a song with lives
+            {
+                for (int i = 0; i < lives; i++)
+                {
+                    drawCharBig(10 + (i * 20), 70, 0x14, RED, RED); // draw the heart on the screen
+                }
+            }
+        }
+            draw_notes(1);
+            update_notes();
+            draw_notes(0);
+            draw_hitLine();
+
+            char notesTextBuffer[4];
+            setCursor(130, 10);
+            sprintf(notesTextBuffer, "%d", numNotesHit);
+            writeString(notesTextBuffer);
+
+            setCursor(170, 25);
+            sprintf(notesTextBuffer, "%d", numNotesMissed);
+            writeString(notesTextBuffer);
+
+            setCursor(80, 40);
+            sprintf(notesTextBuffer, "%d  ", combo);
+            writeString(notesTextBuffer);
+
+            setCursor(130, 55);
+            sprintf(notesTextBuffer, "%d  ", maxCombo);
+            writeString(notesTextBuffer);
+
+            PT_YIELD_usec(30000); // Yield for 30ms
+    }
     PT_END(pt);
 }
 
@@ -811,7 +789,7 @@ void key_released_callback(int key)
                 menu_state = 1; // Start the game
                 draw_background(); // Draw the background for the game
                 draw_hitLine();    // Draw the hit line for the game
-                pt_add_thread(protothread_animation_loop); // Add the animation loop thread to the protothread scheduler
+                setup = false; // reset the setup flag
             }
             else if (menu_selection == 1)
             {
@@ -819,19 +797,20 @@ void key_released_callback(int key)
                 lives = 3;
                 draw_background(); // Draw the background for the game
                 draw_hitLine();    // Draw the hit line for the game
-                pt_add_thread(protothread_animation_loop); // Add the animation loop thread to the protothread scheduler
+                setup = false; // reset the setup flag
             }
             else if (menu_selection == 2)
             {
                 menu_state = 1; // Start the game with 12 lanes
                 draw_background(); // Draw the background for the game
                 draw_hitLine();    // Draw the hit line for the game
-                pt_add_thread(protothread_animation_loop); // Add the animation loop thread to the protothread scheduler
+                setup = false; // reset the setup flag
             }
             else if (menu_selection == 3)
             {
                 menu_state = 2; // Show credits
                 draw_credits(); // Draw the credits on the screen
+                setup = false; // reset the setup flag
             }
         }
     }
@@ -839,6 +818,7 @@ void key_released_callback(int key)
     {
         menu_state = 0; // Go back to the main menu
         draw_menu();    // Draw the main menu
+        setup = false; // reset the setup flag
     }
 }
 
@@ -1071,9 +1051,9 @@ int main()
     gpio_pull_down((BASE_KEYPAD_PIN + 6));
 
     // Add core 0 threads
-    // pt_add_thread(protothread_animation_loop);
-    pt_add_thread(protothread_menu_screen);
-    // pt_add_thread(protothread_blinky);
+    pt_add_thread(protothread_animation_loop);
+    // pt_add_thread(protothread_menu_screen);
+    pt_add_thread(protothread_blinky);
     pt_add_thread(protothread_keypad_scan);
     // Start scheduling core 0 threads
     pt_schedule_start;
