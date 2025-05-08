@@ -758,6 +758,101 @@ static PT_THREAD(protothread_keypad_scan(struct pt *pt))
     PT_END(pt);
 }
 
+
+// Mux Pins
+#define MUX_SEL0 2
+#define MUX_SEL1 3
+#define MUX_SEL2 4
+#define MUX_1 27
+#define MUX_2 28
+#define SIZE 13
+#define MUX_1_CHECK 8
+#define MUX_2_CHECK 5
+
+static unsigned int prev_keys[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+static unsigned int curr_keys[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+static unsigned int new_keys[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+static PT_THREAD(protothread_piano_scan(struct pt *pt))
+{
+    // Initialize protothread and parameters
+    PT_BEGIN(pt);
+    static int i;
+    static int val_1;
+    static int val_2;
+    static int ind;
+
+    gpio_init(MUX_SEL0);
+    gpio_set_dir(MUX_SEL0, GPIO_OUT);
+    gpio_put(MUX_SEL0, 0);
+
+    gpio_init(MUX_SEL1);
+    gpio_set_dir(MUX_SEL1, GPIO_OUT);
+    gpio_put(MUX_SEL1, 0);
+
+    gpio_init(MUX_SEL2);
+    gpio_set_dir(MUX_SEL2, GPIO_OUT);
+    gpio_put(MUX_SEL2, 0);
+
+    gpio_init(MUX_1);
+    gpio_set_dir(MUX_1, GPIO_IN);
+    gpio_pull_down(MUX_1);
+
+    gpio_init(MUX_2);
+    gpio_set_dir(MUX_2, GPIO_IN);
+    gpio_pull_down(MUX_2);
+
+    // Main loop to handle keypad input
+    while (1)
+    {
+        
+        // scan through all of the options to see which one is pressed
+        // see if the pressed ones are not pressed in previous check
+        // if it is new, "key_pressed_callback(i);" on the new one
+        // if it is not pressed anymore, "key_released_callback(i);" on it
+
+        // Scan all of the keyboard keys if they are pressed
+        for (int i = 0; i < 8; i++) {
+            gpio_put(MUX_SEL0, (i >> 0) & 1);
+            gpio_put(MUX_SEL1, (i >> 1) & 1);
+            gpio_put(MUX_SEL2, (i >> 2) & 1);
+
+            sleep_us(5);
+
+            int val_1 = gpio_get(MUX_1); // read the value of the first mux pin
+            curr_keys[i] = val_1; // store the value in the current keys array
+
+            if (i < MUX_2_CHECK) {
+                int val_2 = gpio_get(MUX_2); // read the value of the second mux pin
+                int ind = i + 8;
+                curr_keys[ind] = val_2; // store the value in the current keys array
+            }
+
+        }
+
+        for (int i = 0; i < SIZE; i++) {
+            if (curr_keys[i] != prev_keys[i]) {
+                if (curr_keys[i] == 1) {
+                    key_pressed_callback(i + 1); // Call the key callback function
+                    key_pressed = 1;
+                }
+                else {
+                    key_released_callback(i + 1); // Call the key released callback function
+                    key_pressed = 0;
+                }
+            }
+            prev_keys[i] = curr_keys[i]; // Copy the current keys to the previous keys for the next iteration
+        }
+
+        printf("Key pressed: %d %d %d %d %d %d %d %d %d %d %d %d %d\n", prev_keys[0], prev_keys[1], prev_keys[2], prev_keys[3], prev_keys[4], prev_keys[5], prev_keys[6], prev_keys[8], prev_keys[9], prev_keys[10], prev_keys[11], prev_keys[12]); // Print the key pressed for debugging
+
+        PT_YIELD_usec(30000);
+    }
+    // End the protothread
+    PT_END(pt);
+}
+
+
 /**
  * @brief callback for key release
  */
@@ -1055,6 +1150,7 @@ int main()
     // pt_add_thread(protothread_menu_screen);
     pt_add_thread(protothread_blinky);
     pt_add_thread(protothread_keypad_scan);
+    pt_add_thread(protothread_piano_scan);
     // Start scheduling core 0 threads
     pt_schedule_start;
 }
