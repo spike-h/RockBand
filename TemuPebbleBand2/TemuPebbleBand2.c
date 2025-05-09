@@ -69,6 +69,7 @@
 #include "ASharp.h"
 #include "B.h"
 #include "HighC.h"
+#include "HighD.h"
 #include "amplitude_envelope_mario.h"
 
 // === the fixed point macros ========================================
@@ -184,6 +185,30 @@ void play_c()
         &spi_get_hw(SPI_PORT)->dr, // write address (SPI data register)
         DAC_data_c,                  // The initial read address
         28224,                       // Number of transfers
+        false                      // Don't start immediately.
+    );
+
+    if (!(dma_channel_is_busy(data_chan) || dma_channel_is_busy(ctrl_chan)))
+    {
+        dma_start_channel_mask(1u << data_chan);
+    }
+}
+
+
+void play_HighD()
+{
+    dma_channel_abort(data_chan); // abort the current transfer
+    dma_channel_abort(ctrl_chan); // abort the current transfer
+
+    // stop ping ponging
+    channel_config_set_chain_to(&c2, data_chan); // Chain to control channel COMMENT OUT TO PREVENT LOOPING
+    // reconfigure Dma channel to play mario instead
+    dma_channel_configure(
+        data_chan,                 // Channel to be configured
+        &c2,                       // The configuration we just created
+        &spi_get_hw(SPI_PORT)->dr, // write address (SPI data register)
+        DAC_data_HighD,                  // The initial read address
+        23991,                       // Number of transfers
         false                      // Don't start immediately.
     );
 
@@ -926,6 +951,7 @@ void update_notes()
     }
 }
 
+const unsigned int great_ff[35] = {11, 9, 8, 9, 9, 7, 6, 7, 7, 6, 5, 6, 6, 4, 3, 4, 11, 9, 8, 12, 11, 10, 11, 15, 12, 11, 12, 11, 9, 7, 6, 13, 13};
 
 // const unsigned int twinkle_twinkle[96] = {0, 13, 0, 13, 7, 13, 7, 13, 9, 13, 9, 13, 7, 7, 7, 13, 5, 13, 5, 13, 4, 13, 4, 13, 2, 13, 2, 13, 0, 0, 0, 13, 7, 13, 7, 13, 5, 13, 5, 13, 4, 13, 4, 13, 2, 2, 2, 13,
 //                                             7, 13, 7, 13, 5, 13, 5, 13, 4, 13, 4, 13, 2, 2, 2, 13, 0, 13, 0, 13, 7, 13, 7, 13, 9, 13, 9, 13, 7, 7, 7, 13, 5, 13, 5, 13, 4, 13, 4, 13, 2, 13, 2, 13, 0, 0, 0, 13};
@@ -946,22 +972,26 @@ static PT_THREAD(protothread_twinkle_notes(struct pt *pt))
             PT_YIELD_usec(100000); // Yield for 100ms
         }
         // Spawn notes every 100ms
-        int lane = twinkle_twinkle[twinkle_note]; // Random lane
+        int lane = great_ff[twinkle_note]; // Random lane
         int color = rand() % 16;      // Random color
         // int height = rand() % (maxHeight); // Random height
         int sustain = 0; // Random sustain (0 or 1)
-        if (twinkle_note == 0 || twinkle_note == 6 || twinkle_note == 20 || twinkle_note == 27 || twinkle_note == 34 || twinkle_note == 41) // if the note is a long note
-        {
-            sustain = 1; // make it a long note
-        }
+        // if (twinkle_note == 0 || twinkle_note == 6 || twinkle_note == 20 || twinkle_note == 27 || twinkle_note == 34 || twinkle_note == 41) // if the note is a long note
+        // {
+        //     sustain = 1; // make it a long note
+        // }
+
         int height = hitWidth;    // Fixed height for now
         if (sustain)
         {
             color = YELLOW;
             height = 2 * hitWidth;
         }
-        twinkle_note++;
         spawn_note(lane, color, height, sustain);
+        if (twinkle_note == 23){
+            play_HighD();
+        }
+        twinkle_note++;
         PT_YIELD_usec(800000); // Yield for 100ms
     }
 
