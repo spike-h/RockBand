@@ -541,16 +541,6 @@ void draw_cursor(int erase)
 // ===== menu loop ===========
 // ===========================
 
-static struct pt child_pt; // Declare a protothread control structure for the child for animation loop
-// create a thread for the menu
-static PT_THREAD(protothread_menu_screen(struct pt *pt))
-{
-    PT_BEGIN(pt); // begin the thread
-    // Draw the menu on the screen
-
-    PT_END(pt); // end the thread
-}
-
 void draw_credits()
 {
     // Draw the credits on the screen
@@ -925,7 +915,6 @@ static PT_THREAD(protothread_spawn_notes(struct pt *pt))
 // ========================================
 // ============ ANIMATION LOOP ============
 // ========================================
-char notesTextBuffer[4];
 static PT_THREAD(protothread_animation_loop(struct pt *pt))
 {
     PT_BEGIN(pt);
@@ -970,6 +959,7 @@ static PT_THREAD(protothread_animation_loop(struct pt *pt))
             draw_notes(0);
             draw_hitLine();
 
+            char notesTextBuffer[4];
             setCursor(130, 10);
             sprintf(notesTextBuffer, "%d", numNotesHit);
             writeString(notesTextBuffer);
@@ -1204,6 +1194,7 @@ void key_released_callback(int key)
             if (menu_selection == 0)
             {
                 menu_state = 1; // Start the game
+                numLanes = 4;
                 draw_background(); // Draw the background for the game
                 draw_hitLine();    // Draw the hit line for the game
                 setup = false; // reset the setup flag
@@ -1212,6 +1203,7 @@ void key_released_callback(int key)
             {
                 menu_state = 1; // Start the game with lives
                 lives = 3;
+                numLanes = 4;
                 draw_background(); // Draw the background for the game
                 draw_hitLine();    // Draw the hit line for the game
                 setup = false; // reset the setup flag
@@ -1219,6 +1211,7 @@ void key_released_callback(int key)
             else if (menu_selection == 2)
             {
                 menu_state = 1; // Start the game with 12 lanes
+                numLanes = 13; // Set the number of lanes to 12
                 draw_background(); // Draw the background for the game
                 draw_hitLine();    // Draw the hit line for the game
                 setup = false; // reset the setup flag
@@ -1595,9 +1588,8 @@ int main()
 
     // Add core 0 threads
     pt_add_thread(protothread_animation_loop);
-    // pt_add_thread(protothread_menu_screen);
     pt_add_thread(protothread_blinky);
-    //pt_add_thread(protothread_keypad_scan);
+    pt_add_thread(protothread_keypad_scan);
     pt_add_thread(protothread_piano_scan);
     // Start scheduling core 0 threads
     pt_schedule_start;
