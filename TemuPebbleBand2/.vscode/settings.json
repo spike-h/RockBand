@@ -37,6 +37,9 @@
     "raspberry-pi-pico.cmakePath": "${HOME}/.pico-sdk/cmake/v3.29.9/bin/cmake",
     "raspberry-pi-pico.ninjaPath": "${HOME}/.pico-sdk/ninja/v1.12.1/ninja",
     "files.associations": {
-        "array": "c"
+        "array": "c",
+        "audio_download.h": "c",
+        "audio_download_d.h": "c",
+        "fsharp.h": "c"
     }
 }

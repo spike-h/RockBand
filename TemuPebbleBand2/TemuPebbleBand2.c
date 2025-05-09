@@ -52,11 +52,23 @@
 // Include protothreads
 #include "pt_cornell_rp2040_v1_3.h"
 // include picture header
-#include "zarif.h"
-#include "arnav.h"
+#include "gamebg.h"
 #include "menubg.h"
 // include dac header
-#include "amplitude_envelope_piano.h"
+#include "audio_download.h"
+#include "C.h"
+#include "CSharp.h"
+#include "D.h"
+#include "DSharp.h"
+#include "E.h"
+#include "F.h"
+#include "FSharp.h"
+#include "G.h"
+#include "GSharp.h"
+#include "A.h"
+#include "ASharp.h"
+#include "B.h"
+#include "HighC.h"
 #include "amplitude_envelope_mario.h"
 
 // === the fixed point macros ========================================
@@ -101,7 +113,7 @@ typedef signed int fix15;
 // ================================================================================================================
 
 // Number of samples per period in sine table
-#define sine_table_size 492868
+#define sine_table_size 22008
 
 // Sine table
 int raw_sin[sine_table_size];
@@ -135,6 +147,305 @@ void play_sound()
     }
 }
 
+void play_high_c()
+{
+    dma_channel_abort(data_chan); // abort the current transfer
+    dma_channel_abort(ctrl_chan); // abort the current transfer
+
+    // stop ping ponging
+    channel_config_set_chain_to(&c2, data_chan); // Chain to control channel COMMENT OUT TO PREVENT LOOPING
+    // reconfigure Dma channel to play mario instead
+    dma_channel_configure(
+        data_chan,                 // Channel to be configured
+        &c2,                       // The configuration we just created
+        &spi_get_hw(SPI_PORT)->dr, // write address (SPI data register)
+        DAC_data_high_c,                  // The initial read address
+        40455,                       // Number of transfers
+        false                      // Don't start immediately.
+    );
+
+    if (!(dma_channel_is_busy(data_chan) || dma_channel_is_busy(ctrl_chan)))
+    {
+        dma_start_channel_mask(1u << data_chan);
+    }
+}
+
+void play_c()
+{
+    dma_channel_abort(data_chan); // abort the current transfer
+    dma_channel_abort(ctrl_chan); // abort the current transfer
+
+    // stop ping ponging
+    channel_config_set_chain_to(&c2, data_chan); // Chain to control channel COMMENT OUT TO PREVENT LOOPING
+    // reconfigure Dma channel to play mario instead
+    dma_channel_configure(
+        data_chan,                 // Channel to be configured
+        &c2,                       // The configuration we just created
+        &spi_get_hw(SPI_PORT)->dr, // write address (SPI data register)
+        DAC_data_c,                  // The initial read address
+        28224,                       // Number of transfers
+        false                      // Don't start immediately.
+    );
+
+    if (!(dma_channel_is_busy(data_chan) || dma_channel_is_busy(ctrl_chan)))
+    {
+        dma_start_channel_mask(1u << data_chan);
+    }
+}
+
+void play_cSharp()
+{
+    dma_channel_abort(data_chan); // abort the current transfer
+    dma_channel_abort(ctrl_chan); // abort the current transfer
+
+    // stop ping ponging
+    channel_config_set_chain_to(&c2, data_chan); // Chain to control channel COMMENT OUT TO PREVENT LOOPING
+    // reconfigure Dma channel to play mario instead
+    dma_channel_configure(
+        data_chan,                 // Channel to be configured
+        &c2,                       // The configuration we just created
+        &spi_get_hw(SPI_PORT)->dr, // write address (SPI data register)
+        DAC_data_cSharp,                  // The initial read address
+        35751,                       // Number of transfers
+        false                      // Don't start immediately.
+    );
+
+    if (!(dma_channel_is_busy(data_chan) || dma_channel_is_busy(ctrl_chan)))
+    {
+        dma_start_channel_mask(1u << data_chan);
+    }
+}
+
+void play_d()
+{
+    dma_channel_abort(data_chan); // abort the current transfer
+    dma_channel_abort(ctrl_chan); // abort the current transfer
+
+    // stop ping ponging
+    channel_config_set_chain_to(&c2, data_chan); // Chain to control channel COMMENT OUT TO PREVENT LOOPING
+    // reconfigure Dma channel to play mario instead
+    dma_channel_configure(
+        data_chan,                 // Channel to be configured
+        &c2,                       // The configuration we just created
+        &spi_get_hw(SPI_PORT)->dr, // write address (SPI data register)
+        DAC_data_d,                  // The initial read address
+        36692,                       // Number of transfers
+        false                      // Don't start immediately.
+    );
+
+    if (!(dma_channel_is_busy(data_chan) || dma_channel_is_busy(ctrl_chan)))
+    {
+        dma_start_channel_mask(1u << data_chan);
+    }
+}
+
+void play_dSharp()
+{
+    dma_channel_abort(data_chan); // abort the current transfer
+    dma_channel_abort(ctrl_chan); // abort the current transfer
+
+    // stop ping ponging
+    channel_config_set_chain_to(&c2, data_chan); // Chain to control channel COMMENT OUT TO PREVENT LOOPING
+    // reconfigure Dma channel to play mario instead
+    dma_channel_configure(
+        data_chan,                 // Channel to be configured
+        &c2,                       // The configuration we just created
+        &spi_get_hw(SPI_PORT)->dr, // write address (SPI data register)
+        DAC_data_dSharp,                  // The initial read address
+        39044,                       // Number of transfers
+        false                      // Don't start immediately.
+    );
+
+    if (!(dma_channel_is_busy(data_chan) || dma_channel_is_busy(ctrl_chan)))
+    {
+        dma_start_channel_mask(1u << data_chan);
+    }
+}
+
+void play_e()
+{
+    dma_channel_abort(data_chan); // abort the current transfer
+    dma_channel_abort(ctrl_chan); // abort the current transfer
+
+    // stop ping ponging
+    channel_config_set_chain_to(&c2, data_chan); // Chain to control channel COMMENT OUT TO PREVENT LOOPING
+    // reconfigure Dma channel to play mario instead
+    dma_channel_configure(
+        data_chan,                 // Channel to be configured
+        &c2,                       // The configuration we just created
+        &spi_get_hw(SPI_PORT)->dr, // write address (SPI data register)
+        DAC_data_e,                  // The initial read address
+        37162,                       // Number of transfers
+        false                      // Don't start immediately.
+    );
+
+    if (!(dma_channel_is_busy(data_chan) || dma_channel_is_busy(ctrl_chan)))
+    {
+        dma_start_channel_mask(1u << data_chan);
+    }
+}
+
+void play_f()
+{
+    dma_channel_abort(data_chan); // abort the current transfer
+    dma_channel_abort(ctrl_chan); // abort the current transfer
+
+    // stop ping ponging
+    channel_config_set_chain_to(&c2, data_chan); // Chain to control channel COMMENT OUT TO PREVENT LOOPING
+    // reconfigure Dma channel to play mario instead
+    dma_channel_configure(
+        data_chan,                 // Channel to be configured
+        &c2,                       // The configuration we just created
+        &spi_get_hw(SPI_PORT)->dr, // write address (SPI data register)
+        DAC_data_f,                  // The initial read address
+        39044,                       // Number of transfers
+        false                      // Don't start immediately.
+    );
+
+    if (!(dma_channel_is_busy(data_chan) || dma_channel_is_busy(ctrl_chan)))
+    {
+        dma_start_channel_mask(1u << data_chan);
+    }
+}
+
+void play_fSharp()
+{
+    dma_channel_abort(data_chan); // abort the current transfer
+    dma_channel_abort(ctrl_chan); // abort the current transfer
+
+    // stop ping ponging
+    channel_config_set_chain_to(&c2, data_chan); // Chain to control channel COMMENT OUT TO PREVENT LOOPING
+    // reconfigure Dma channel to play mario instead
+    dma_channel_configure(
+        data_chan,                 // Channel to be configured
+        &c2,                       // The configuration we just created
+        &spi_get_hw(SPI_PORT)->dr, // write address (SPI data register)
+        DAC_data_fSharp,                  // The initial read address
+        38573,                       // Number of transfers
+        false                      // Don't start immediately.
+    );
+
+    if (!(dma_channel_is_busy(data_chan) || dma_channel_is_busy(ctrl_chan)))
+    {
+        dma_start_channel_mask(1u << data_chan);
+    }
+}
+
+void play_g()
+{
+    dma_channel_abort(data_chan); // abort the current transfer
+    dma_channel_abort(ctrl_chan); // abort the current transfer
+
+    // stop ping ponging
+    channel_config_set_chain_to(&c2, data_chan); // Chain to control channel COMMENT OUT TO PREVENT LOOPING
+    // reconfigure Dma channel to play mario instead
+    dma_channel_configure(
+        data_chan,                 // Channel to be configured
+        &c2,                       // The configuration we just created
+        &spi_get_hw(SPI_PORT)->dr, // write address (SPI data register)
+        DAC_data_g,                  // The initial read address
+        33399,                       // Number of transfers
+        false                      // Don't start immediately.
+    );
+
+    if (!(dma_channel_is_busy(data_chan) || dma_channel_is_busy(ctrl_chan)))
+    {
+        dma_start_channel_mask(1u << data_chan);
+    }
+}
+
+void play_gSharp()
+{
+    dma_channel_abort(data_chan); // abort the current transfer
+    dma_channel_abort(ctrl_chan); // abort the current transfer
+
+    // stop ping ponging
+    channel_config_set_chain_to(&c2, data_chan); // Chain to control channel COMMENT OUT TO PREVENT LOOPING
+    // reconfigure Dma channel to play mario instead
+    dma_channel_configure(
+        data_chan,                 // Channel to be configured
+        &c2,                       // The configuration we just created
+        &spi_get_hw(SPI_PORT)->dr, // write address (SPI data register)
+        DAC_data_gSharp,                  // The initial read address
+        31517,                       // Number of transfers
+        false                      // Don't start immediately.
+    );
+
+    if (!(dma_channel_is_busy(data_chan) || dma_channel_is_busy(ctrl_chan)))
+    {
+        dma_start_channel_mask(1u << data_chan);
+    }
+}
+
+void play_a()
+{
+    dma_channel_abort(data_chan); // abort the current transfer
+    dma_channel_abort(ctrl_chan); // abort the current transfer
+
+    // stop ping ponging
+    channel_config_set_chain_to(&c2, data_chan); // Chain to control channel COMMENT OUT TO PREVENT LOOPING
+    // reconfigure Dma channel to play mario instead
+    dma_channel_configure(
+        data_chan,                 // Channel to be configured
+        &c2,                       // The configuration we just created
+        &spi_get_hw(SPI_PORT)->dr, // write address (SPI data register)
+        DAC_data_a,                  // The initial read address
+        35751,                       // Number of transfers
+        false                      // Don't start immediately.
+    );
+
+    if (!(dma_channel_is_busy(data_chan) || dma_channel_is_busy(ctrl_chan)))
+    {
+        dma_start_channel_mask(1u << data_chan);
+    }
+}
+
+void play_aSharp()
+{
+    dma_channel_abort(data_chan); // abort the current transfer
+    dma_channel_abort(ctrl_chan); // abort the current transfer
+
+    // stop ping ponging
+    channel_config_set_chain_to(&c2, data_chan); // Chain to control channel COMMENT OUT TO PREVENT LOOPING
+    // reconfigure Dma channel to play mario instead
+    dma_channel_configure(
+        data_chan,                 // Channel to be configured
+        &c2,                       // The configuration we just created
+        &spi_get_hw(SPI_PORT)->dr, // write address (SPI data register)
+        DAC_data_aSharp,                  // The initial read address
+        29636,                       // Number of transfers
+        false                      // Don't start immediately.
+    );
+
+    if (!(dma_channel_is_busy(data_chan) || dma_channel_is_busy(ctrl_chan)))
+    {
+        dma_start_channel_mask(1u << data_chan);
+    }
+}
+
+void play_b()
+{
+    dma_channel_abort(data_chan); // abort the current transfer
+    dma_channel_abort(ctrl_chan); // abort the current transfer
+
+    // stop ping ponging
+    channel_config_set_chain_to(&c2, data_chan); // Chain to control channel COMMENT OUT TO PREVENT LOOPING
+    // reconfigure Dma channel to play mario instead
+    dma_channel_configure(
+        data_chan,                 // Channel to be configured
+        &c2,                       // The configuration we just created
+        &spi_get_hw(SPI_PORT)->dr, // write address (SPI data register)
+        DAC_data_b,                  // The initial read address
+        31517,                       // Number of transfers
+        false                      // Don't start immediately.
+    );
+
+    if (!(dma_channel_is_busy(data_chan) || dma_channel_is_busy(ctrl_chan)))
+    {
+        dma_start_channel_mask(1u << data_chan);
+    }
+}
+
 void play_mario_death()
 {
     dma_channel_abort(data_chan); // abort the current transfer
@@ -163,7 +474,7 @@ void play_mario_death()
 
     // bring back original config
     // stop ping ponging
-    channel_config_set_chain_to(&c2, ctrl_chan); // Chain to control channel COMMENT OUT TO PREVENT LOOPING
+    // channel_config_set_chain_to(&c2, ctrl_chan); // Chain to control channel COMMENT OUT TO PREVENT LOOPING
     dma_channel_configure(
         data_chan,                 // Channel to be configured
         &c2,                       // The configuration we just created
@@ -236,21 +547,7 @@ static PT_THREAD(protothread_menu_screen(struct pt *pt))
 {
     PT_BEGIN(pt); // begin the thread
     // Draw the menu on the screen
-    draw_menu();
-    draw_cursor(0); // draw the cursor on the screen
-    // Wait for a button press to select a menu option
-    while (1)
-    {
-        PT_YIELD_usec(30000); // wait for 30ms  
-        if (menu_state == 1)
-        {
-            PT_SPAWN(pt, &child_pt, protothread_animation_loop(&child_pt));
-            // Wait for the animation loop to finish before continuing
-            menu_state = 0; // reset the menu state
-            draw_menu();
-        }
-        // PT_YIELD(pt); // yield to other threads
-    }
+
     PT_END(pt); // end the thread
 }
 
@@ -288,15 +585,16 @@ typedef struct note
     // Maybe add start time and
 } note;
 
-#define numLanes 4                                                 // number of lanes
-volatile note notes[numLanes][50];                                   // 3 lanes of notes, 50 is the max number of notes in each lane at a single time (arbitary large number)
-volatile int activeNotesInLane[numLanes];                            // number of notes in each lane
-const int gravity = 10;                                              // The speed at which the notes fall -- can be changed to make it harder or easier
+int numLanes = 13;                                                 // number of lanes
+volatile note notes[13][50];                                   // 3 lanes of notes, 50 is the max number of notes in each lane at a single time (arbitary large number)
+volatile int activeNotesInLane[13];                            // number of notes in each lane
+const int gravity = 5;                                              // The speed at which the notes fall -- can be changed to make it harder or easier
 const int noteSkinniness = 2;                                        // offset for the notes to make them look better and be in the center of the lane
 volatile int numNotesHit = 0;                                        // number of notes hit
 volatile int numNotesMissed = 0;                                     // number of notes missed
 const bool pianoKeyTypes[13] = {1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1}; // 1 is a white key 0 is black -- used for drawing the piano keys on the screen
 bool pianoKeysPressed[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+bool setup = false; // flag to check if the setup has been done
 
 void draw_piano(int lane, bool outline);
 
@@ -547,28 +845,22 @@ void update_notes()
                 // Remove the note from the lane
                 erase_note(i, j);
                 numNotesMissed++; // increment the number of notes missed
-                combo = 0;        // reset the combo counter
                 if (maxCombo < combo)
                 {
                     maxCombo = combo; // update the max combo counter
                 }
+                combo = 0; // reset the combo counter
                 if (lives != -1) // if we are playing a song with lives
                 {
                     lives--; // decrement the number of lives
-                    if (lives == 2) {
-                        drawCharBig(50, 70, 0x14, WHITE, BLACK); // erase last heart
-                    } 
-                    if (lives == 1) {
-                        drawCharBig(30, 70, 0x14, WHITE, BLACK); // erase last heart
-                    }
-                    if (lives == 0) {
-                        drawCharBig(10, 70, 0x14, WHITE, BLACK); // erase last heart
-                    }
+                    // erase the last heart on the screen 
+                    drawCharBig(10 + ((lives) * 20), 70, 0x14, WHITE, BLACK); // erase the last heart
                     
                     if (lives == 0)
                     {
                         play_mario_death(); // play the death sound
                         menu_state = 0; // go back to the main menu
+                        setup = false; // reset the setup flag
                         // stop dma channel
                         dma_channel_abort(data_chan); // abort the channel
                         dma_channel_abort(ctrl_chan); // abort the channel
@@ -624,7 +916,7 @@ static PT_THREAD(protothread_spawn_notes(struct pt *pt))
             height = 2 * hitWidth;
         }
         spawn_note(lane, color, height, sustain);
-        PT_YIELD_usec(750000); // Yield for 100ms
+        PT_YIELD_usec(2000000); // Yield for 100ms
     }
 
     PT_END(pt);
@@ -632,62 +924,70 @@ static PT_THREAD(protothread_spawn_notes(struct pt *pt))
 
 // ========================================
 // ============ ANIMATION LOOP ============
-// ========================================a
+// ========================================
+char notesTextBuffer[4];
 static PT_THREAD(protothread_animation_loop(struct pt *pt))
 {
     PT_BEGIN(pt);
 
-    char notesTextBuffer[4];
-    pt_add_thread(protothread_spawn_notes);
-    drawPicture(-250, 0, (unsigned short *)vga_arnav_image, 640, 480); // Draw the picture on the screen
-    drawPicture(160, 0, (unsigned short *)vga_image, 640, 480); // Draw the picture on the screen
-    draw_background();
-    // Spawn notes
-    // spawn_note(0, RED, 50);
-    // spawn_note(1, GREEN, 50);
-    // spawn_note(2, BLUE, 50);
-
-    if (lives != -1) // if we are playing a song with lives
+    if (menu_state == 0)
     {
-        // write using big font
-        drawCharBig(10, 70, 0x14, RED, RED); // draw the letter L on the screen
-        drawCharBig(30, 70, 0x14, RED, RED); // draw the letter L on the screen
-        drawCharBig(50, 70, 0x14, RED, RED); // draw the letter L on the screen
-    }
-
-    while (menu_state == 1)
-    {
-        draw_notes(1);
-        update_notes();
-        draw_notes(0);
-        draw_hitLine();
-
-        setCursor(130, 10);
-        sprintf(notesTextBuffer, "%d", numNotesHit);
-        writeString(notesTextBuffer);
-
-        setCursor(170, 25);
-        sprintf(notesTextBuffer, "%d", numNotesMissed);
-        writeString(notesTextBuffer);
-
-        setCursor(80, 40);
-        sprintf(notesTextBuffer, "%d", combo);
-        writeString(notesTextBuffer);
-
-        setCursor(130, 55);
-        sprintf(notesTextBuffer, "%d", maxCombo);
-        writeString(notesTextBuffer);
-
-        if (lives == 0) {
-            // kill animation thread
-            // draw_menu();
-            PT_EXIT(&child_pt); // kill the animation thread
+        if (!setup) {
+            setup = true; // set the setup flag to true
+            draw_menu(); // Draw the menu on the screen
+            draw_cursor(0); // Draw the cursor on the screen
         }
-
-        PT_YIELD_usec(30000); // Yield for 30ms
     }
-    draw_menu();
-    PT_EXIT(&child_pt); // kill the animation thread
+    else if (menu_state == 2)
+    {
+        if (!setup) {
+            setup=true;
+            draw_credits(); // Draw the credits on the screen
+        }
+    }
+    else if (menu_state == 1)
+    {
+        if (!setup) {
+            setup=true;
+            pt_add_thread(protothread_spawn_notes);
+            drawPicture(0, 0, (unsigned short *)vga_image, 640, 480); // Draw the picture on the screen
+            draw_background();
+            // Spawn notes
+            // spawn_note(0, RED, 50);
+            // spawn_note(1, GREEN, 50);
+            // spawn_note(2, BLUE, 50);
+
+            if (lives != -1) // if we are playing a song with lives
+            {
+                for (int i = 0; i < lives; i++)
+                {
+                    drawCharBig(10 + (i * 20), 70, 0x14, RED, RED); // draw the heart on the screen
+                }
+            }
+        }
+            draw_notes(1);
+            update_notes();
+            draw_notes(0);
+            draw_hitLine();
+
+            setCursor(130, 10);
+            sprintf(notesTextBuffer, "%d", numNotesHit);
+            writeString(notesTextBuffer);
+
+            setCursor(170, 25);
+            sprintf(notesTextBuffer, "%d", numNotesMissed);
+            writeString(notesTextBuffer);
+
+            setCursor(80, 40);
+            sprintf(notesTextBuffer, "%d  ", combo);
+            writeString(notesTextBuffer);
+
+            setCursor(130, 55);
+            sprintf(notesTextBuffer, "%d  ", maxCombo);
+            writeString(notesTextBuffer);
+
+            PT_YIELD_usec(30000); // Yield for 30ms
+    }
     PT_END(pt);
 }
 
@@ -780,6 +1080,101 @@ static PT_THREAD(protothread_keypad_scan(struct pt *pt))
     PT_END(pt);
 }
 
+
+// Mux Pins
+#define MUX_SEL0 2
+#define MUX_SEL1 3
+#define MUX_SEL2 4
+#define MUX_1 27
+#define MUX_2 28
+#define SIZE 13
+#define MUX_1_CHECK 8
+#define MUX_2_CHECK 5
+
+static unsigned int prev_keys[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+static unsigned int curr_keys[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+static unsigned int new_keys[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+static PT_THREAD(protothread_piano_scan(struct pt *pt))
+{
+    // Initialize protothread and parameters
+    PT_BEGIN(pt);
+    static int i;
+    static int val_1;
+    static int val_2;
+    static int ind;
+
+    gpio_init(MUX_SEL0);
+    gpio_set_dir(MUX_SEL0, GPIO_OUT);
+    gpio_put(MUX_SEL0, 0);
+
+    gpio_init(MUX_SEL1);
+    gpio_set_dir(MUX_SEL1, GPIO_OUT);
+    gpio_put(MUX_SEL1, 0);
+
+    gpio_init(MUX_SEL2);
+    gpio_set_dir(MUX_SEL2, GPIO_OUT);
+    gpio_put(MUX_SEL2, 0);
+
+    gpio_init(MUX_1);
+    gpio_set_dir(MUX_1, GPIO_IN);
+    gpio_pull_down(MUX_1);
+
+    gpio_init(MUX_2);
+    gpio_set_dir(MUX_2, GPIO_IN);
+    gpio_pull_down(MUX_2);
+
+    // Main loop to handle keypad input
+    while (1)
+    {
+        
+        // scan through all of the options to see which one is pressed
+        // see if the pressed ones are not pressed in previous check
+        // if it is new, "key_pressed_callback(i);" on the new one
+        // if it is not pressed anymore, "key_released_callback(i);" on it
+
+        // Scan all of the keyboard keys if they are pressed
+        for (int i = 0; i < 8; i++) {
+            gpio_put(MUX_SEL0, (i >> 0) & 1);
+            gpio_put(MUX_SEL1, (i >> 1) & 1);
+            gpio_put(MUX_SEL2, (i >> 2) & 1);
+
+            sleep_us(5);
+
+            int val_1 = gpio_get(MUX_1); // read the value of the first mux pin
+            curr_keys[i] = val_1; // store the value in the current keys array
+
+            if (i < MUX_2_CHECK) {
+                int val_2 = gpio_get(MUX_2); // read the value of the second mux pin
+                int ind = i + 8;
+                curr_keys[ind] = val_2; // store the value in the current keys array
+            }
+
+        }
+
+        for (int i = 0; i < SIZE; i++) {
+            if (curr_keys[i] != prev_keys[i]) {
+                if (curr_keys[i] == 1) {
+                    key_pressed_callback(i + 1); // Call the key callback function
+                    key_pressed = 1;
+                }
+                else {
+                    key_released_callback(i + 1); // Call the key released callback function
+                    key_pressed = 0;
+                }
+            }
+            prev_keys[i] = curr_keys[i]; // Copy the current keys to the previous keys for the next iteration
+        }
+
+        printf("Key pressed: %d %d %d %d %d %d %d %d %d %d %d %d %d\n", prev_keys[0], prev_keys[1], prev_keys[2], prev_keys[3], prev_keys[4], prev_keys[5], prev_keys[6], prev_keys[8], prev_keys[9], prev_keys[10], prev_keys[11], prev_keys[12]); // Print the key pressed for debugging
+
+        PT_YIELD_usec(30000);
+    }
+    // End the protothread
+    PT_END(pt);
+}
+
+
 /**
  * @brief callback for key release
  */
@@ -811,7 +1206,7 @@ void key_released_callback(int key)
                 menu_state = 1; // Start the game
                 draw_background(); // Draw the background for the game
                 draw_hitLine();    // Draw the hit line for the game
-                pt_add_thread(protothread_animation_loop); // Add the animation loop thread to the protothread scheduler
+                setup = false; // reset the setup flag
             }
             else if (menu_selection == 1)
             {
@@ -819,19 +1214,20 @@ void key_released_callback(int key)
                 lives = 3;
                 draw_background(); // Draw the background for the game
                 draw_hitLine();    // Draw the hit line for the game
-                pt_add_thread(protothread_animation_loop); // Add the animation loop thread to the protothread scheduler
+                setup = false; // reset the setup flag
             }
             else if (menu_selection == 2)
             {
                 menu_state = 1; // Start the game with 12 lanes
                 draw_background(); // Draw the background for the game
                 draw_hitLine();    // Draw the hit line for the game
-                pt_add_thread(protothread_animation_loop); // Add the animation loop thread to the protothread scheduler
+                setup = false; // reset the setup flag
             }
             else if (menu_selection == 3)
             {
                 menu_state = 2; // Show credits
                 draw_credits(); // Draw the credits on the screen
+                setup = false; // reset the setup flag
             }
         }
     }
@@ -839,6 +1235,7 @@ void key_released_callback(int key)
     {
         menu_state = 0; // Go back to the main menu
         draw_menu();    // Draw the main menu
+        setup = false; // reset the setup flag
     }
 }
 
@@ -866,6 +1263,45 @@ void key_pressed_callback_game(int key)
         pianoKeysPressed[key] = true;
         // Draw the key pressed on the screen
         draw_piano(key, 0); // draw the piano keys on the screen
+        if (key == 0) {
+            play_c();
+        }
+        if (key == 1) {
+            play_cSharp();
+        }
+        if (key == 2) {
+            play_d();
+        }
+        if (key == 3) {
+            play_dSharp();
+        }
+        if (key == 4) {
+            play_e();
+        }
+        if (key == 5) {
+            play_f();
+        }
+        if (key == 6) {
+            play_fSharp();
+        }
+        if (key == 7) {
+            play_g();
+        }
+        if (key == 8) {
+            play_gSharp();
+        }
+        if (key == 9) {
+            play_a();
+        }
+        if (key == 10) {
+            play_aSharp();
+        }
+        if (key == 11) {
+            play_b();
+        }
+        if (key == 12) {
+            play_high_c();
+        }
         
         // Check if there are any notes in the lane
         if (activeNotesInLane[key] > 0)
@@ -877,11 +1313,51 @@ void key_pressed_callback_game(int key)
             for (int i = 0; i < activeNotesInLane[key]; i++)
             {
                 note noteKey = notes[key][i];
+                
                 // Check if the note is in the correct position
                 if (check_hit(noteKey))
                 {
                     notes[key][i].hit = true; // mark the note as hit
-                    play_sound();             // play sound
+                    //play_sound();             // play sound
+                    // if (key == 0) {
+                    //     play_c();
+                    // }
+                    // if (key == 1) {
+                    //     play_cSharp();
+                    // }
+                    // if (key == 2) {
+                    //     play_d();
+                    // }
+                    // if (key == 3) {
+                    //     play_dSharp();
+                    // }
+                    // if (key == 4) {
+                    //     play_e();
+                    // }
+                    // if (key == 5) {
+                    //     play_f();
+                    // }
+                    // if (key == 6) {
+                    //     play_fSharp();
+                    // }
+                    // if (key == 7) {
+                    //     play_g();
+                    // }
+                    // if (key == 8) {
+                    //     play_gSharp();
+                    // }
+                    // if (key == 9) {
+                    //     play_a();
+                    // }
+                    // if (key == 10) {
+                    //     play_aSharp();
+                    // }
+                    // if (key == 11) {
+                    //     play_b();
+                    // }
+                    // if (key == 12) {
+                    //     play_c();
+                    // }
                     combo++;                  // increment the combo counter
                     if (abs(notes[key][i].y + notes[key][i].height - (SCREEN_HEIGHT - hitHeight + hitWidth)) < 20) // if the note is hit perfectly
                     {
@@ -1039,7 +1515,7 @@ int main()
     // chain to the controller DMA channel
 
     // VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
-    channel_config_set_chain_to(&c2, ctrl_chan); // Chain to control channel COMMENT OUT TO PREVENT LOOPING
+    // channel_config_set_chain_to(&c2, ctrl_chan); // Chain to control channel COMMENT OUT TO PREVENT LOOPING
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
     dma_channel_configure(
@@ -1070,11 +1546,59 @@ int main()
     gpio_pull_down((BASE_KEYPAD_PIN + 5));
     gpio_pull_down((BASE_KEYPAD_PIN + 6));
 
+    // while(1) {
+    //     play_c();
+    //     sleep_ms(500);
+    //     play_e();
+    //     sleep_ms(500);
+    //     play_g();
+    //     sleep_ms(500);
+    //     play_c();
+    //     play_e();
+    //     sleep_ms(500);
+    //     play_c();
+    //     play_e();
+    //     play_g();
+
+    //     sleep_ms(1000);
+    // }
+
+    // while(1){
+    // play_c();
+    // sleep_ms(500);
+    // // play_cSharp();
+    // // sleep_ms(500);
+    // play_d();
+    // // sleep_ms(500);
+    // // play_dSharp();
+    // sleep_ms(500);
+    // play_e();
+    // sleep_ms(500);
+    // play_f();
+    // // sleep_ms(500);
+    // // play_fSharp();
+    // sleep_ms(500);
+    // play_g();
+    // // sleep_ms(500);
+    // // play_gSharp();
+    // sleep_ms(500);
+    // play_a();
+    // // sleep_ms(500);
+    // // play_aSharp();
+    // sleep_ms(500);
+    // play_b();
+    // sleep_ms(500);
+    // play_c();
+    // sleep_ms(500);
+    // sleep_ms(1000);
+    // }
+
     // Add core 0 threads
-    // pt_add_thread(protothread_animation_loop);
-    pt_add_thread(protothread_menu_screen);
-    // pt_add_thread(protothread_blinky);
-    pt_add_thread(protothread_keypad_scan);
+    pt_add_thread(protothread_animation_loop);
+    // pt_add_thread(protothread_menu_screen);
+    pt_add_thread(protothread_blinky);
+    //pt_add_thread(protothread_keypad_scan);
+    pt_add_thread(protothread_piano_scan);
     // Start scheduling core 0 threads
     pt_schedule_start;
 }
