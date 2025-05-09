@@ -53,7 +53,7 @@
 #include "pt_cornell_rp2040_v1_3.h"
 // include picture header
 #include "gamebg.h"
-#include "arnav.h"
+#include "menubg.h"
 // include dac header
 #include "audio_download.h"
 #include "C.h"
@@ -160,8 +160,8 @@ void play_high_c()
         data_chan,                 // Channel to be configured
         &c2,                       // The configuration we just created
         &spi_get_hw(SPI_PORT)->dr, // write address (SPI data register)
-        DAC_data_high_c,                  // The initial read address
-        40455,                       // Number of transfers
+        DAC_data_high_c,           // The initial read address
+        40455,                     // Number of transfers
         false                      // Don't start immediately.
     );
 
@@ -183,8 +183,8 @@ void play_c()
         data_chan,                 // Channel to be configured
         &c2,                       // The configuration we just created
         &spi_get_hw(SPI_PORT)->dr, // write address (SPI data register)
-        DAC_data_c,                  // The initial read address
-        28224,                       // Number of transfers
+        DAC_data_c,                // The initial read address
+        28224,                     // Number of transfers
         false                      // Don't start immediately.
     );
 
@@ -193,7 +193,6 @@ void play_c()
         dma_start_channel_mask(1u << data_chan);
     }
 }
-
 
 void play_HighD()
 {
@@ -207,8 +206,8 @@ void play_HighD()
         data_chan,                 // Channel to be configured
         &c2,                       // The configuration we just created
         &spi_get_hw(SPI_PORT)->dr, // write address (SPI data register)
-        DAC_data_HighD,                  // The initial read address
-        23991,                       // Number of transfers
+        DAC_data_HighD,            // The initial read address
+        23991,                     // Number of transfers
         false                      // Don't start immediately.
     );
 
@@ -230,8 +229,8 @@ void play_cSharp()
         data_chan,                 // Channel to be configured
         &c2,                       // The configuration we just created
         &spi_get_hw(SPI_PORT)->dr, // write address (SPI data register)
-        DAC_data_cSharp,                  // The initial read address
-        35751,                       // Number of transfers
+        DAC_data_cSharp,           // The initial read address
+        35751,                     // Number of transfers
         false                      // Don't start immediately.
     );
 
@@ -253,8 +252,8 @@ void play_d()
         data_chan,                 // Channel to be configured
         &c2,                       // The configuration we just created
         &spi_get_hw(SPI_PORT)->dr, // write address (SPI data register)
-        DAC_data_d,                  // The initial read address
-        36692,                       // Number of transfers
+        DAC_data_d,                // The initial read address
+        36692,                     // Number of transfers
         false                      // Don't start immediately.
     );
 
@@ -276,8 +275,8 @@ void play_dSharp()
         data_chan,                 // Channel to be configured
         &c2,                       // The configuration we just created
         &spi_get_hw(SPI_PORT)->dr, // write address (SPI data register)
-        DAC_data_dSharp,                  // The initial read address
-        39044,                       // Number of transfers
+        DAC_data_dSharp,           // The initial read address
+        39044,                     // Number of transfers
         false                      // Don't start immediately.
     );
 
@@ -299,8 +298,8 @@ void play_e()
         data_chan,                 // Channel to be configured
         &c2,                       // The configuration we just created
         &spi_get_hw(SPI_PORT)->dr, // write address (SPI data register)
-        DAC_data_e,                  // The initial read address
-        37162,                       // Number of transfers
+        DAC_data_e,                // The initial read address
+        37162,                     // Number of transfers
         false                      // Don't start immediately.
     );
 
@@ -322,8 +321,8 @@ void play_f()
         data_chan,                 // Channel to be configured
         &c2,                       // The configuration we just created
         &spi_get_hw(SPI_PORT)->dr, // write address (SPI data register)
-        DAC_data_f,                  // The initial read address
-        39044,                       // Number of transfers
+        DAC_data_f,                // The initial read address
+        39044,                     // Number of transfers
         false                      // Don't start immediately.
     );
 
@@ -345,8 +344,8 @@ void play_fSharp()
         data_chan,                 // Channel to be configured
         &c2,                       // The configuration we just created
         &spi_get_hw(SPI_PORT)->dr, // write address (SPI data register)
-        DAC_data_fSharp,                  // The initial read address
-        38573,                       // Number of transfers
+        DAC_data_fSharp,           // The initial read address
+        38573,                     // Number of transfers
         false                      // Don't start immediately.
     );
 
@@ -368,8 +367,8 @@ void play_g()
         data_chan,                 // Channel to be configured
         &c2,                       // The configuration we just created
         &spi_get_hw(SPI_PORT)->dr, // write address (SPI data register)
-        DAC_data_g,                  // The initial read address
-        33399,                       // Number of transfers
+        DAC_data_g,                // The initial read address
+        33399,                     // Number of transfers
         false                      // Don't start immediately.
     );
 
@@ -391,8 +390,8 @@ void play_gSharp()
         data_chan,                 // Channel to be configured
         &c2,                       // The configuration we just created
         &spi_get_hw(SPI_PORT)->dr, // write address (SPI data register)
-        DAC_data_gSharp,                  // The initial read address
-        31517,                       // Number of transfers
+        DAC_data_gSharp,           // The initial read address
+        31517,                     // Number of transfers
         false                      // Don't start immediately.
     );
 
@@ -414,8 +413,8 @@ void play_a()
         data_chan,                 // Channel to be configured
         &c2,                       // The configuration we just created
         &spi_get_hw(SPI_PORT)->dr, // write address (SPI data register)
-        DAC_data_a,                  // The initial read address
-        35751,                       // Number of transfers
+        DAC_data_a,                // The initial read address
+        35751,                     // Number of transfers
         false                      // Don't start immediately.
     );
 
@@ -437,8 +436,8 @@ void play_aSharp()
         data_chan,                 // Channel to be configured
         &c2,                       // The configuration we just created
         &spi_get_hw(SPI_PORT)->dr, // write address (SPI data register)
-        DAC_data_aSharp,                  // The initial read address
-        29636,                       // Number of transfers
+        DAC_data_aSharp,           // The initial read address
+        29636,                     // Number of transfers
         false                      // Don't start immediately.
     );
 
@@ -460,8 +459,8 @@ void play_b()
         data_chan,                 // Channel to be configured
         &c2,                       // The configuration we just created
         &spi_get_hw(SPI_PORT)->dr, // write address (SPI data register)
-        DAC_data_b,                  // The initial read address
-        31517,                       // Number of transfers
+        DAC_data_b,                // The initial read address
+        31517,                     // Number of transfers
         false                      // Don't start immediately.
     );
 
@@ -483,8 +482,8 @@ void play_mario_death()
         data_chan,                 // Channel to be configured
         &c2,                       // The configuration we just created
         &spi_get_hw(SPI_PORT)->dr, // write address (SPI data register)
-        DAC_data_mario,                  // The initial read address
-        59806,                       // Number of transfers
+        DAC_data_mario,            // The initial read address
+        59806,                     // Number of transfers
         false                      // Don't start immediately.
     );
 
@@ -524,18 +523,18 @@ void play_mario_death()
 static PT_THREAD(protothread_animation_loop(struct pt *pt));
 
 // Menu state variables
-int menu_state = 0; // 0 = main menu, 1 = game, 2 = credits, 3 = game over
-int menu_selection = 0; // 0 = play endless, 1 = play song with lives, 2 = play song with no lives, 3 = credits
+int menu_state = 0;             // 0 = main menu, 1 = game, 2 = credits, 3 = game over
+int menu_selection = 0;         // 0 = play endless, 1 = play song with lives, 2 = play song with no lives, 3 = credits
 int current_menu_selection = 0; // current menu selection
 int lives = -1;
-int numLanes = 13;    
+int numLanes = 13;
 void draw_piano(int lane, bool outline); // forward declaration of draw_piano function
 
 // draw cursor on the menu given the current menu selection
 void draw_cursor(int erase)
 {
     // Draw the cursor on the screen
-    int x = 80; // x position of the cursor
+    int x = 80;                          // x position of the cursor
     int y = 320 + (menu_selection * 40); // y position of the cursor
     if (erase)
     {
@@ -568,11 +567,11 @@ void draw_credits()
 }
 
 const int trackWidth = SCREEN_WIDTH / 3; // total width of the track
-const int whiteHeight = 120;            // height of the white key
-const int hitHeight = whiteHeight + 80;               // top height of the hit line from above the bottom of the screen
+const int whiteHeight = 120;             // height of the white key
+const int hitHeight = whiteHeight + 80;  // top height of the hit line from above the bottom of the screen
 const int hitWidth = 40;                 // how tall the hit line is (hittable area)
 int combo = 0;                           // combo counter for the number of notes hit in a row
-int maxCombo = 0;                       // max combo counter for the number of notes hit in a row
+int maxCombo = 0;                        // max combo counter for the number of notes hit in a row
 
 typedef struct note
 {
@@ -584,25 +583,24 @@ typedef struct note
     bool sustain; // if the note is a sustained note or not
     // Maybe add start time and
 } note;
-                                             // number of lanes
+// number of lanes
 
-const int gravity = 5;                                              // The speed at which the notes fall -- can be changed to make it harder or easier
-const int noteSkinniness = 2;                                        // offset for the notes to make them look better and be in the center of the lane
-volatile int numNotesHit = 0;                                        // number of notes hit
-volatile int numNotesMissed = 0;                                     // number of notes missed
+const int gravity = 5;                                                  // The speed at which the notes fall -- can be changed to make it harder or easier
+const int noteSkinniness = 2;                                           // offset for the notes to make them look better and be in the center of the lane
+volatile int numNotesHit = 0;                                           // number of notes hit
+volatile int numNotesMissed = 0;                                        // number of notes missed
 const bool pianoKeyTypes[13] = {1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1}; // 1 is a white key 0 is black -- used for drawing the piano keys on the screen
 bool pianoKeysPressed[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 bool setup = false; // flag to check if the setup has been done
 
-volatile note notes[13][50];                                   // 3 lanes of notes, 50 is the max number of notes in each lane at a single time (arbitary large number)
-volatile int activeNotesInLane[13];                            // number of notes in each lane
-
+volatile note notes[13][50];        // 3 lanes of notes, 50 is the max number of notes in each lane at a single time (arbitary large number)
+volatile int activeNotesInLane[13]; // number of notes in each lane
 
 // draw the main menu
 void draw_menu()
 {
     // fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, BLACK); // clear the screen
-    drawPicture(0, 0, (unsigned short *)vga_arnav_image, 640, 480); // Draw the picture on the screen
+    drawPicture(0, 0, (unsigned short *)vga_menu_image, 640, 480); // Draw the picture on the screen
     setTextColor2(WHITE, BLACK);
     setTextSize(2);
     setCursor(100, 320);
@@ -614,7 +612,6 @@ void draw_menu()
     setCursor(100, 440);
     writeString("Credits");
 }
-
 
 void draw_piano(int lane, bool outline);
 
@@ -687,42 +684,45 @@ void draw_piano(int lane, bool outline)
         }
         if (((lane != (numLanes - 1)) && (lane != 0)) && (!(pianoKeyTypes[lane + 1]) && !(pianoKeyTypes[lane - 1]))) // black key on the right and left
         {
-            if (!outline) {
-                fillRect(SCREEN_WIDTH / 2 - trackWidth / 2 + (lane * trackWidth / numLanes) - 1, SCREEN_HEIGHT - whiteHeight, (trackWidth / numLanes) + 2, whiteHeight, keyColor);                                 // draw the note and bleed it into the next lane a bit
-                fillRect(SCREEN_WIDTH / 2 - trackWidth / 2 + ((lane + 1) * trackWidth / numLanes) - 2, SCREEN_HEIGHT - whiteHeight + blackHeight, (trackWidth / numLanes) * 1 / 2 + 2,  blackHeight, keyColor); // draw the note and bleed it into the next lane a bit
-                fillRect(SCREEN_WIDTH / 2 - trackWidth / 2 + ((lane - 1) * trackWidth / numLanes) + trackWidth /(2*numLanes) - 2, SCREEN_HEIGHT - whiteHeight + blackHeight, (trackWidth / numLanes) * 1 / 2 + 2, blackHeight, keyColor); // draw the note and bleed it into the next lane a bit
+            if (!outline)
+            {
+                fillRect(SCREEN_WIDTH / 2 - trackWidth / 2 + (lane * trackWidth / numLanes) - 1, SCREEN_HEIGHT - whiteHeight, (trackWidth / numLanes) + 2, whiteHeight, keyColor);                                                           // draw the note and bleed it into the next lane a bit
+                fillRect(SCREEN_WIDTH / 2 - trackWidth / 2 + ((lane + 1) * trackWidth / numLanes) - 2, SCREEN_HEIGHT - whiteHeight + blackHeight, (trackWidth / numLanes) * 1 / 2 + 2, blackHeight, keyColor);                               // draw the note and bleed it into the next lane a bit
+                fillRect(SCREEN_WIDTH / 2 - trackWidth / 2 + ((lane - 1) * trackWidth / numLanes) + trackWidth / (2 * numLanes) - 2, SCREEN_HEIGHT - whiteHeight + blackHeight, (trackWidth / numLanes) * 1 / 2 + 2, blackHeight, keyColor); // draw the note and bleed it into the next lane a bit
             }
-            drawRect (SCREEN_WIDTH / 2 - trackWidth / 2 + ((lane - 1) * trackWidth / numLanes) + trackWidth /(2*numLanes), SCREEN_HEIGHT - whiteHeight, (trackWidth / numLanes) * 2, whiteHeight, outlineColor);                     // draw the outline
+            drawRect(SCREEN_WIDTH / 2 - trackWidth / 2 + ((lane - 1) * trackWidth / numLanes) + trackWidth / (2 * numLanes), SCREEN_HEIGHT - whiteHeight, (trackWidth / numLanes) * 2, whiteHeight, outlineColor); // draw the outline
             char rightCOlor = (pianoKeysPressed[lane + 1]) ? GREEN : BLACK;
-            drawVLine(SCREEN_WIDTH / 2 - trackWidth / 2 + ((lane - 1) * trackWidth / numLanes) + trackWidth /(2*numLanes) + (trackWidth / numLanes) * 2 - 1, SCREEN_HEIGHT - whiteHeight, blackHeight, rightCOlor);           // draw the outline
+            drawVLine(SCREEN_WIDTH / 2 - trackWidth / 2 + ((lane - 1) * trackWidth / numLanes) + trackWidth / (2 * numLanes) + (trackWidth / numLanes) * 2 - 1, SCREEN_HEIGHT - whiteHeight, blackHeight, rightCOlor); // draw the outline
             char leftCOlor = (pianoKeysPressed[lane - 1]) ? GREEN : BLACK;
-            drawVLine(SCREEN_WIDTH / 2 - trackWidth / 2 + ((lane - 1) * trackWidth / numLanes) + trackWidth /(2*numLanes), SCREEN_HEIGHT - whiteHeight, blackHeight, leftCOlor);
-
-        }                                                         
+            drawVLine(SCREEN_WIDTH / 2 - trackWidth / 2 + ((lane - 1) * trackWidth / numLanes) + trackWidth / (2 * numLanes), SCREEN_HEIGHT - whiteHeight, blackHeight, leftCOlor);
+        }
         else if (lane != (numLanes - 1) && !(pianoKeyTypes[lane + 1])) // black key on the right
         {
-            if (!outline) {
-                fillRect(SCREEN_WIDTH / 2 - trackWidth / 2 + (lane * trackWidth / numLanes) -1, SCREEN_HEIGHT - whiteHeight, (trackWidth / numLanes) + 2, whiteHeight, keyColor);                                 // draw the note and bleed it into the next lane a bit
+            if (!outline)
+            {
+                fillRect(SCREEN_WIDTH / 2 - trackWidth / 2 + (lane * trackWidth / numLanes) - 1, SCREEN_HEIGHT - whiteHeight, (trackWidth / numLanes) + 2, whiteHeight, keyColor);                             // draw the note and bleed it into the next lane a bit
                 fillRect(SCREEN_WIDTH / 2 - trackWidth / 2 + ((lane + 1) * trackWidth / numLanes) - 2, SCREEN_HEIGHT - whiteHeight + blackHeight, (trackWidth / numLanes) * 1 / 2 + 2, blackHeight, keyColor); // draw the note and bleed it into the next lane a bit
             }
-            drawRect(SCREEN_WIDTH / 2 - trackWidth / 2 + (lane * trackWidth / numLanes), SCREEN_HEIGHT - whiteHeight, (trackWidth / numLanes) * 3 / 2 + 1, whiteHeight, outlineColor);                     // draw the outline
+            drawRect(SCREEN_WIDTH / 2 - trackWidth / 2 + (lane * trackWidth / numLanes), SCREEN_HEIGHT - whiteHeight, (trackWidth / numLanes) * 3 / 2 + 1, whiteHeight, outlineColor); // draw the outline
             char rightCOlor = (pianoKeysPressed[lane + 1]) ? GREEN : BLACK;
             drawVLine(SCREEN_WIDTH / 2 - trackWidth / 2 + (lane * trackWidth / numLanes) + (trackWidth / numLanes) * 3 / 2, SCREEN_HEIGHT - whiteHeight, blackHeight, rightCOlor);
         }
         else if (lane != 0 && !(pianoKeyTypes[lane - 1])) // black key on the left
         {
-            if (!outline) {
-                fillRect(SCREEN_WIDTH / 2 - trackWidth / 2 + (lane * trackWidth / numLanes) -2 , SCREEN_HEIGHT - whiteHeight, (trackWidth / numLanes) + 2, whiteHeight, keyColor);                                 // draw the note and bleed it into the next lane a bit
-                fillRect(SCREEN_WIDTH / 2 - trackWidth / 2 + ((lane - 1) * trackWidth / numLanes) + trackWidth /(2*numLanes) - 2, SCREEN_HEIGHT - whiteHeight + blackHeight, (trackWidth / numLanes) * 1 / 2 + 2, blackHeight, keyColor); // draw the note and bleed it into the next lane a bit
+            if (!outline)
+            {
+                fillRect(SCREEN_WIDTH / 2 - trackWidth / 2 + (lane * trackWidth / numLanes) - 2, SCREEN_HEIGHT - whiteHeight, (trackWidth / numLanes) + 2, whiteHeight, keyColor);                                                           // draw the note and bleed it into the next lane a bit
+                fillRect(SCREEN_WIDTH / 2 - trackWidth / 2 + ((lane - 1) * trackWidth / numLanes) + trackWidth / (2 * numLanes) - 2, SCREEN_HEIGHT - whiteHeight + blackHeight, (trackWidth / numLanes) * 1 / 2 + 2, blackHeight, keyColor); // draw the note and bleed it into the next lane a bit
             }
-            drawRect (SCREEN_WIDTH / 2 - trackWidth / 2 + ((lane - 1) * trackWidth / numLanes) + trackWidth /(2*numLanes) - 1, SCREEN_HEIGHT - whiteHeight, (trackWidth / numLanes) * 3 / 2 + 3, whiteHeight, outlineColor);               // draw the outline
+            drawRect(SCREEN_WIDTH / 2 - trackWidth / 2 + ((lane - 1) * trackWidth / numLanes) + trackWidth / (2 * numLanes) - 1, SCREEN_HEIGHT - whiteHeight, (trackWidth / numLanes) * 3 / 2 + 3, whiteHeight, outlineColor); // draw the outline
             char leftCOlor = (pianoKeysPressed[lane - 1]) ? GREEN : BLACK;
-            drawVLine(SCREEN_WIDTH / 2 - trackWidth / 2 + ((lane - 1) * trackWidth / numLanes) + trackWidth /(2*numLanes) - 1, SCREEN_HEIGHT - whiteHeight, blackHeight, leftCOlor);
-        } 
+            drawVLine(SCREEN_WIDTH / 2 - trackWidth / 2 + ((lane - 1) * trackWidth / numLanes) + trackWidth / (2 * numLanes) - 1, SCREEN_HEIGHT - whiteHeight, blackHeight, leftCOlor);
+        }
         else // no black key on either side
         {
-            if (!outline) {
-                fillRect(SCREEN_WIDTH / 2 - trackWidth / 2 + (lane * trackWidth / numLanes) -1, SCREEN_HEIGHT - whiteHeight, (trackWidth / numLanes) + 2, whiteHeight, keyColor);
+            if (!outline)
+            {
+                fillRect(SCREEN_WIDTH / 2 - trackWidth / 2 + (lane * trackWidth / numLanes) - 1, SCREEN_HEIGHT - whiteHeight, (trackWidth / numLanes) + 2, whiteHeight, keyColor);
             }
             drawRect(SCREEN_WIDTH / 2 - trackWidth / 2 + (lane * trackWidth / numLanes), SCREEN_HEIGHT - whiteHeight, (trackWidth / numLanes) + 1, whiteHeight, outlineColor);
         }
@@ -827,7 +827,8 @@ void erase_note(int lane, int noteIndex)
     } // erase the whole note if it is not a sustained note
     activeNotesInLane[lane]--;
     notes[lane][noteIndex] = notes[lane][activeNotesInLane[lane]]; // Move the last note to the current position
-    if (activeNotesInLane[lane] <= 0) {
+    if (activeNotesInLane[lane] <= 0)
+    {
         draw_piano(lane, 0); // draw the key on the screen
     }
 }
@@ -866,9 +867,12 @@ void draw_end_screen()
     setCursor(50, 220);
     writeString("Your accuracy was: ");
     setCursor(270, 220);
-    if (numNotesHit + numNotesMissed > 0) {
+    if (numNotesHit + numNotesMissed > 0)
+    {
         sprintf(notesTextBuffer, "%.2f", (float)numNotesHit / (numNotesHit + numNotesMissed));
-    } else {
+    }
+    else
+    {
         sprintf(notesTextBuffer, "N/A"); // Handle the case where no notes are hit or missed
     }
     writeString(notesTextBuffer);
@@ -913,19 +917,19 @@ void update_notes()
                 {
                     maxCombo = combo; // update the max combo counter
                 }
-                combo = 0; // reset the combo counter
+                combo = 0;       // reset the combo counter
                 if (lives != -1) // if we are playing a song with lives
                 {
                     lives--; // decrement the number of lives
-                    // erase the last heart on the screen 
+                    // erase the last heart on the screen
                     drawCharBig(10 + ((lives) * 20), 70, 0x14, WHITE, BLACK); // erase the last heart
-                    
+
                     if (lives == 0)
                     {
                         play_mario_death(); // play the death sound
-                        menu_state = 3; // go back to the main menu
-                        draw_end_screen(); // draw the end screen on the screen
-                        setup = false; // reset the setup flag
+                        menu_state = 3;     // go back to the main menu
+                        draw_end_screen();  // draw the end screen on the screen
+                        setup = false;      // reset the setup flag
                         // clear notes
                         for (int i = 0; i < 13; i++)
                         {
@@ -936,29 +940,29 @@ void update_notes()
                         {
                             for (int j = 0; j < 50; j++)
                             {
-                                notes[i][j].hit = false; // reset the hit status of the note
-                                notes[i][j].sustain = false; // reset the sustain status of the note
+                                notes[i][j].hit = false;            // reset the hit status of the note
+                                notes[i][j].sustain = false;        // reset the sustain status of the note
                                 notes[i][j].height = SCREEN_HEIGHT; // reset the height of the note
-                                notes[i][j].y = 0; // reset the y position of the note
-                                notes[i][j].lane = 0; // reset the lane of the note
-                                notes[i][j].color = 0; // reset the color of the note
+                                notes[i][j].y = 0;                  // reset the y position of the note
+                                notes[i][j].lane = 0;               // reset the lane of the note
+                                notes[i][j].color = 0;              // reset the color of the note
                             }
                         }
-                        
+
                         // stop dma channel
                         dma_channel_abort(data_chan); // abort the channel
                         dma_channel_abort(ctrl_chan); // abort the channel
-                        return;         // return to the main menu
+                        return;                       // return to the main menu
                     }
                 }
 
                 // write miss on the screen
-                setCursor(SCREEN_WIDTH-100, 10);
+                setCursor(SCREEN_WIDTH - 100, 10);
                 setTextColor2(WHITE, RED);
                 setTextSize(2);
                 writeString("MISS!!!!");
 
-                continue;         // skip the rest of the loop
+                continue; // skip the rest of the loop
             }
 
             // If the note has been hit, make it smaller
@@ -979,11 +983,11 @@ const unsigned int great_ff[35] = {11, 9, 8, 9, 9, 7, 6, 7, 7, 6, 5, 6, 6, 4, 3,
 // const unsigned int twinkle_twinkle[96] = {0, 13, 0, 13, 7, 13, 7, 13, 9, 13, 9, 13, 7, 7, 7, 13, 5, 13, 5, 13, 4, 13, 4, 13, 2, 13, 2, 13, 0, 0, 0, 13, 7, 13, 7, 13, 5, 13, 5, 13, 4, 13, 4, 13, 2, 2, 2, 13,
 //                                             7, 13, 7, 13, 5, 13, 5, 13, 4, 13, 4, 13, 2, 2, 2, 13, 0, 13, 0, 13, 7, 13, 7, 13, 9, 13, 9, 13, 7, 7, 7, 13, 5, 13, 5, 13, 4, 13, 4, 13, 2, 13, 2, 13, 0, 0, 0, 13};
 const unsigned int twinkle_twinkle1[45] = {0, 0, 7, 7, 9, 9, 7, 5, 5, 4, 4, 2, 2, 0, 7, 7, 5, 5, 4, 4, 2,
-                                            7, 7, 5, 5, 4, 4, 2, 0, 0, 7, 7, 9, 9, 7, 5, 5, 4, 4, 2, 2, 0, 13, 13, 13};  
-                                            
+                                           7, 7, 5, 5, 4, 4, 2, 0, 0, 7, 7, 9, 9, 7, 5, 5, 4, 4, 2, 2, 0, 13, 13, 13};
+
 const unsigned int twinkle_twinkle2[35] = {11, 9, 8, 9, 9, 7, 6, 7, 7, 6, 5, 6, 6, 4, 3, 4, 11, 9, 8, 12, 11, 10, 11, 15, 12, 11, 12, 11, 9, 7, 6, 13, 13};
-    
-    //6, 13, 20, 27, 34, 41
+
+// 6, 13, 20, 27, 34, 41
 const unsigned int *twinkle_twinkle;
 
 static PT_THREAD(protothread_twinkle_notes(struct pt *pt))
@@ -999,26 +1003,28 @@ static PT_THREAD(protothread_twinkle_notes(struct pt *pt))
 
         if (twinkle_note < songLength) // reset the note index
         {
-                        // Spawn notes every 100ms
+            // Spawn notes every 100ms
             int lane = twinkle_twinkle[twinkle_note]; // Random lane
-            int color = rand() % 16;      // Random color
+            int color = rand() % 16;                  // Random color
             // int height = rand() % (maxHeight); // Random height
-            int sustain = 0; // Random sustain (0 or 1)
+            int sustain = 0;                                                                                                                                          // Random sustain (0 or 1)
             if (songLength == 45 && (twinkle_note == 0 || twinkle_note == 6 || twinkle_note == 20 || twinkle_note == 27 || twinkle_note == 34 || twinkle_note == 41)) // if the note is a long note
             {
                 sustain = 1; // make it a long note
             }
-            int height = hitWidth;    // Fixed height for now
+            int height = hitWidth; // Fixed height for now
             if (sustain)
             {
                 color = YELLOW;
                 height = 2 * hitWidth;
             }
 
-            if ((songLength == 35) && (twinkle_note == 23)){
+            if ((songLength == 35) && (twinkle_note == 23))
+            {
                 play_HighD();
             }
-            else {
+            else
+            {
                 spawn_note(lane, color, height, sustain);
             }
         }
@@ -1033,13 +1039,12 @@ static PT_THREAD(protothread_twinkle_notes(struct pt *pt))
 
         twinkle_note++;
 
-        if (twinkle_note >= songLength+5)
+        if (twinkle_note >= songLength + 5)
         {
-            menu_state = 3; // go back to the main menu
+            menu_state = 3;    // go back to the main menu
             draw_end_screen(); // draw the end screen on the screen
-            setup = false; // reset the setup flag
+            setup = false;     // reset the setup flag
         }
-
 
         PT_YIELD_usec(800000); // Yield for 100ms
     }
@@ -1059,30 +1064,33 @@ static PT_THREAD(protothread_animation_loop(struct pt *pt))
 
     if (menu_state == 0)
     {
-        if (!setup) {
-            setup = true; // set the setup flag to true
-            draw_menu(); // Draw the menu on the screen
+        if (!setup)
+        {
+            setup = true;   // set the setup flag to true
+            draw_menu();    // Draw the menu on the screen
             draw_cursor(0); // Draw the cursor on the screen
         }
     }
     else if (menu_state == 2)
     {
-        if (!setup) {
-            setup=true;
+        if (!setup)
+        {
+            setup = true;
             draw_credits(); // Draw the credits on the screen
         }
     }
     else if (menu_state == 3)
     {
-        if (!setup) {
-            setup=true;
+        if (!setup)
+        {
+            setup = true;
             draw_end_screen(); // Draw the credits on the screen
-            
-            twinkle_note = 0; // reset the note index
-            numNotesHit = 0; // reset the number of notes hit
+
+            twinkle_note = 0;   // reset the note index
+            numNotesHit = 0;    // reset the number of notes hit
             numNotesMissed = 0; // reset the number of notes missed
-            combo = 0; // reset the combo counter
-            maxCombo = 0; // reset the max combo counter
+            combo = 0;          // reset the combo counter
+            maxCombo = 0;       // reset the max combo counter
             // reset the lives
             lives = -1; // reset the lives
 
@@ -1095,20 +1103,21 @@ static PT_THREAD(protothread_animation_loop(struct pt *pt))
             {
                 for (int j = 0; j < 50; j++)
                 {
-                    notes[i][j].hit = false; // reset the hit status of the note
-                    notes[i][j].sustain = false; // reset the sustain status of the note
+                    notes[i][j].hit = false;            // reset the hit status of the note
+                    notes[i][j].sustain = false;        // reset the sustain status of the note
                     notes[i][j].height = SCREEN_HEIGHT; // reset the height of the note
-                    notes[i][j].y = 0; // reset the y position of the note
-                    notes[i][j].lane = 0; // reset the lane of the note
-                    notes[i][j].color = 0; // reset the color of the note
+                    notes[i][j].y = 0;                  // reset the y position of the note
+                    notes[i][j].lane = 0;               // reset the lane of the note
+                    notes[i][j].color = 0;              // reset the color of the note
                 }
             }
         }
     }
     else if (menu_state == 1)
     {
-        if (!setup) {
-            setup=true;
+        if (!setup)
+        {
+            setup = true;
             drawPicture(0, 0, (unsigned short *)vga_image, 640, 480); // Draw the picture on the screen
             draw_background();
 
@@ -1120,31 +1129,31 @@ static PT_THREAD(protothread_animation_loop(struct pt *pt))
                 }
             }
         }
-            draw_notes(1);
-            update_notes();
-            draw_notes(0);
-            draw_hitLine();
+        draw_notes(1);
+        update_notes();
+        draw_notes(0);
+        draw_hitLine();
 
-            setTextColor2(WHITE, BLACK);
+        setTextColor2(WHITE, BLACK);
 
-            char notesTextBuffer[4];
-            setCursor(130, 10);
-            sprintf(notesTextBuffer, "%d", numNotesHit);
-            writeString(notesTextBuffer);
+        char notesTextBuffer[4];
+        setCursor(130, 10);
+        sprintf(notesTextBuffer, "%d", numNotesHit);
+        writeString(notesTextBuffer);
 
-            setCursor(170, 25);
-            sprintf(notesTextBuffer, "%d", numNotesMissed);
-            writeString(notesTextBuffer);
+        setCursor(170, 25);
+        sprintf(notesTextBuffer, "%d", numNotesMissed);
+        writeString(notesTextBuffer);
 
-            setCursor(80, 40);
-            sprintf(notesTextBuffer, "%d  ", combo);
-            writeString(notesTextBuffer);
+        setCursor(80, 40);
+        sprintf(notesTextBuffer, "%d  ", combo);
+        writeString(notesTextBuffer);
 
-            setCursor(130, 55);
-            sprintf(notesTextBuffer, "%d  ", maxCombo);
-            writeString(notesTextBuffer);
+        setCursor(130, 55);
+        sprintf(notesTextBuffer, "%d  ", maxCombo);
+        writeString(notesTextBuffer);
 
-            PT_YIELD_usec(30000); // Yield for 30ms
+        PT_YIELD_usec(30000); // Yield for 30ms
     }
     PT_END(pt);
 }
@@ -1174,10 +1183,10 @@ void key_released_callback();       // forward declaration of the key released c
 // ============= KEYPAD CODE ================
 // ===========================================
 
-void key_pressed_callback_game(int key); // forward declaration of the key callback function
+void key_pressed_callback_game(int key);  // forward declaration of the key callback function
 void key_released_callback_game(int key); // forward declaration of the key released callback function
-void key_pressed_callback(int key); // forward declaration of the key callback function
-void key_released_callback(int key); // forward declaration of the key released callback function
+void key_pressed_callback(int key);       // forward declaration of the key callback function
+void key_released_callback(int key);      // forward declaration of the key released callback function
 
 static PT_THREAD(protothread_keypad_scan(struct pt *pt))
 {
@@ -1238,7 +1247,6 @@ static PT_THREAD(protothread_keypad_scan(struct pt *pt))
     PT_END(pt);
 }
 
-
 // Mux Pins
 #define MUX_SEL0 2
 #define MUX_SEL1 3
@@ -1249,6 +1257,8 @@ static PT_THREAD(protothread_keypad_scan(struct pt *pt))
 #define MUX_1_CHECK 8
 #define MUX_2_CHECK 5
 
+static unsigned int prev_keys2[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+bool prev_prev = false;
 static unsigned int prev_keys[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 static unsigned int curr_keys[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 static unsigned int new_keys[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -1285,14 +1295,15 @@ static PT_THREAD(protothread_piano_scan(struct pt *pt))
     // Main loop to handle keypad input
     while (1)
     {
-        
+
         // scan through all of the options to see which one is pressed
         // see if the pressed ones are not pressed in previous check
         // if it is new, "key_pressed_callback(i);" on the new one
         // if it is not pressed anymore, "key_released_callback(i);" on it
 
         // Scan all of the keyboard keys if they are pressed
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < 8; i++)
+        {
             gpio_put(MUX_SEL0, (i >> 0) & 1);
             gpio_put(MUX_SEL1, (i >> 1) & 1);
             gpio_put(MUX_SEL2, (i >> 2) & 1);
@@ -1300,23 +1311,39 @@ static PT_THREAD(protothread_piano_scan(struct pt *pt))
             sleep_us(5);
 
             int val_1 = gpio_get(MUX_1); // read the value of the first mux pin
-            curr_keys[i] = val_1; // store the value in the current keys array
 
-            if (i < MUX_2_CHECK) {
+            if (i == 6)
+            {
+                curr_keys[7] = val_1;
+            }
+            else if (i == 7)
+            {
+                curr_keys[6] = val_1;
+            }
+            else
+            {
+                curr_keys[i] = val_1; // store the value in the current keys array
+            }
+
+            if (i < MUX_2_CHECK)
+            {
                 int val_2 = gpio_get(MUX_2); // read the value of the second mux pin
                 int ind = i + 8;
                 curr_keys[ind] = val_2; // store the value in the current keys array
             }
-
         }
 
-        for (int i = 0; i < SIZE; i++) {
-            if (curr_keys[i] != prev_keys[i]) {
-                if (curr_keys[i] == 1) {
+        for (int i = 0; i < SIZE; i++)
+        {
+            if (curr_keys[i] != prev_keys[i])
+            {
+                if (curr_keys[i] == 1)
+                {
                     key_pressed_callback(i + 1); // Call the key callback function
                     key_pressed = 1;
                 }
-                else {
+                else
+                {
                     key_released_callback(i + 1); // Call the key released callback function
                     key_pressed = 0;
                 }
@@ -1329,7 +1356,6 @@ static PT_THREAD(protothread_piano_scan(struct pt *pt))
     // End the protothread
     PT_END(pt);
 }
-
 
 /**
  * @brief callback for key release
@@ -1353,26 +1379,26 @@ void key_released_callback(int key)
         {
             for (int j = 0; j < 50; j++)
             {
-                notes[i][j].hit = false; // reset the hit status of the note
-                notes[i][j].sustain = false; // reset the sustain status of the note
+                notes[i][j].hit = false;            // reset the hit status of the note
+                notes[i][j].sustain = false;        // reset the sustain status of the note
                 notes[i][j].height = SCREEN_HEIGHT; // reset the height of the note
-                notes[i][j].y = 0; // reset the y position of the note
-                notes[i][j].lane = 0; // reset the lane of the note
-                notes[i][j].color = 0; // reset the color of the note
+                notes[i][j].y = 0;                  // reset the y position of the note
+                notes[i][j].lane = 0;               // reset the lane of the note
+                notes[i][j].color = 0;              // reset the color of the note
             }
         }
 
         if (key == 1)
         {
-            draw_cursor(1); // erase the cursor on the screen
+            draw_cursor(1);                            // erase the cursor on the screen
             menu_selection = (menu_selection + 1) % 4; // Move down the menu
-            draw_cursor(0); // draw the cursor on the screen
+            draw_cursor(0);                            // draw the cursor on the screen
         }
         else if (key == 2)
         {
-            draw_cursor(1); // erase the cursor on the screen
+            draw_cursor(1);                                // erase the cursor on the screen
             menu_selection = (menu_selection - 1 + 4) % 4; // Move up the menu
-            draw_cursor(0); // draw the cursor on the screen
+            draw_cursor(0);                                // draw the cursor on the screen
         }
         else if (key == 3)
         {
@@ -1381,10 +1407,10 @@ void key_released_callback(int key)
                 menu_state = 1; // Start the game
                 numLanes = 13;
                 twinkle_twinkle = twinkle_twinkle2; // Set the song to play
-                songLength = 35; // Set the song length
-                draw_background(); // Draw the background for the game
-                draw_hitLine();    // Draw the hit line for the game
-                setup = false; // reset the setup flag
+                songLength = 35;                    // Set the song length
+                draw_background();                  // Draw the background for the game
+                draw_hitLine();                     // Draw the hit line for the game
+                setup = false;                      // reset the setup flag
             }
             else if (menu_selection == 1)
             {
@@ -1392,26 +1418,26 @@ void key_released_callback(int key)
                 lives = 3;
                 numLanes = 13;
                 twinkle_twinkle = twinkle_twinkle2; // Set the song to play
-                songLength = 35; // Set the song length
-                draw_background(); // Draw the background for the game
-                draw_hitLine();    // Draw the hit line for the game
-                setup = false; // reset the setup flag
+                songLength = 35;                    // Set the song length
+                draw_background();                  // Draw the background for the game
+                draw_hitLine();                     // Draw the hit line for the game
+                setup = false;                      // reset the setup flag
             }
             else if (menu_selection == 2)
             {
                 twinkle_twinkle = twinkle_twinkle1; // Set the song to play
-                songLength = 45; // Set the song length
-                menu_state = 1; // Start the game with 12 lanes
-                numLanes = 13; // Set the number of lanes to 12
-                draw_background(); // Draw the background for the game
-                draw_hitLine();    // Draw the hit line for the game
-                setup = false; // reset the setup flag
+                songLength = 45;                    // Set the song length
+                menu_state = 1;                     // Start the game with 12 lanes
+                numLanes = 13;                      // Set the number of lanes to 12
+                draw_background();                  // Draw the background for the game
+                draw_hitLine();                     // Draw the hit line for the game
+                setup = false;                      // reset the setup flag
             }
             else if (menu_selection == 3)
             {
                 menu_state = 2; // Show credits
                 draw_credits(); // Draw the credits on the screen
-                setup = false; // reset the setup flag
+                setup = false;  // reset the setup flag
             }
         }
     }
@@ -1419,7 +1445,7 @@ void key_released_callback(int key)
     {
         menu_state = 0; // Go back to the main menu
         draw_menu();    // Draw the main menu
-        setup = false; // reset the setup flag
+        setup = false;  // reset the setup flag
     }
 }
 
@@ -1447,46 +1473,59 @@ void key_pressed_callback_game(int key)
         pianoKeysPressed[key] = true;
         // Draw the key pressed on the screen
         draw_piano(key, 0); // draw the piano keys on the screen
-        if (key == 0) {
+        if (key == 0)
+        {
             play_c();
         }
-        if (key == 1) {
+        if (key == 1)
+        {
             play_cSharp();
         }
-        if (key == 2) {
+        if (key == 2)
+        {
             play_d();
         }
-        if (key == 3) {
+        if (key == 3)
+        {
             play_dSharp();
         }
-        if (key == 4) {
+        if (key == 4)
+        {
             play_e();
         }
-        if (key == 5) {
+        if (key == 5)
+        {
             play_f();
         }
-        if (key == 6) {
+        if (key == 6)
+        {
             play_fSharp();
         }
-        if (key == 7) {
+        if (key == 7)
+        {
             play_g();
         }
-        if (key == 8) {
+        if (key == 8)
+        {
             play_gSharp();
         }
-        if (key == 9) {
+        if (key == 9)
+        {
             play_a();
         }
-        if (key == 10) {
+        if (key == 10)
+        {
             play_aSharp();
         }
-        if (key == 11) {
+        if (key == 11)
+        {
             play_b();
         }
-        if (key == 12) {
+        if (key == 12)
+        {
             play_high_c();
         }
-        
+
         // Check if there are any notes in the lane
         if (activeNotesInLane[key] > 0)
         {
@@ -1497,57 +1536,57 @@ void key_pressed_callback_game(int key)
             for (int i = 0; i < activeNotesInLane[key]; i++)
             {
                 note noteKey = notes[key][i];
-                
+
                 // Check if the note is in the correct position
                 if (check_hit(noteKey))
                 {
                     notes[key][i].hit = true; // mark the note as hit
-                    numNotesHit++;                                         // increment the number of notes hit
-                    //play_sound();             // play sound
-                    // if (key == 0) {
-                    //     play_c();
-                    // }
-                    // if (key == 1) {
-                    //     play_cSharp();
-                    // }
-                    // if (key == 2) {
-                    //     play_d();
-                    // }
-                    // if (key == 3) {
-                    //     play_dSharp();
-                    // }
-                    // if (key == 4) {
-                    //     play_e();
-                    // }
-                    // if (key == 5) {
-                    //     play_f();
-                    // }
-                    // if (key == 6) {
-                    //     play_fSharp();
-                    // }
-                    // if (key == 7) {
-                    //     play_g();
-                    // }
-                    // if (key == 8) {
-                    //     play_gSharp();
-                    // }
-                    // if (key == 9) {
-                    //     play_a();
-                    // }
-                    // if (key == 10) {
-                    //     play_aSharp();
-                    // }
-                    // if (key == 11) {
-                    //     play_b();
-                    // }
-                    // if (key == 12) {
-                    //     play_c();
-                    // }
-                    combo++;                  // increment the combo counter
+                    numNotesHit++;            // increment the number of notes hit
+                    // play_sound();             // play sound
+                    //  if (key == 0) {
+                    //      play_c();
+                    //  }
+                    //  if (key == 1) {
+                    //      play_cSharp();
+                    //  }
+                    //  if (key == 2) {
+                    //      play_d();
+                    //  }
+                    //  if (key == 3) {
+                    //      play_dSharp();
+                    //  }
+                    //  if (key == 4) {
+                    //      play_e();
+                    //  }
+                    //  if (key == 5) {
+                    //      play_f();
+                    //  }
+                    //  if (key == 6) {
+                    //      play_fSharp();
+                    //  }
+                    //  if (key == 7) {
+                    //      play_g();
+                    //  }
+                    //  if (key == 8) {
+                    //      play_gSharp();
+                    //  }
+                    //  if (key == 9) {
+                    //      play_a();
+                    //  }
+                    //  if (key == 10) {
+                    //      play_aSharp();
+                    //  }
+                    //  if (key == 11) {
+                    //      play_b();
+                    //  }
+                    //  if (key == 12) {
+                    //      play_c();
+                    //  }
+                    combo++;                                                                                       // increment the combo counter
                     if (abs(notes[key][i].y + notes[key][i].height - (SCREEN_HEIGHT - hitHeight + hitWidth)) < 20) // if the note is hit perfectly
                     {
                         // write perfect on the screen
-                        setCursor(SCREEN_WIDTH-100, 10);
+                        setCursor(SCREEN_WIDTH - 100, 10);
                         setTextColor2(WHITE, GREEN);
                         setTextSize(2);
                         writeString("PERFECT!");
@@ -1555,7 +1594,7 @@ void key_pressed_callback_game(int key)
                     else if (abs(notes[key][i].y + notes[key][i].height - (SCREEN_HEIGHT - hitHeight + hitWidth)) < 30) // if the note is hit well
                     {
                         // write GOOD on the screen
-                        setCursor(SCREEN_WIDTH-100, 10);
+                        setCursor(SCREEN_WIDTH - 100, 10);
                         setTextColor2(WHITE, GREEN);
                         setTextSize(2);
                         writeString("GOOD!!!!!");
@@ -1563,7 +1602,7 @@ void key_pressed_callback_game(int key)
                     else // if the note is hit poorly
                     {
                         // write GOOD on the screen
-                        setCursor(SCREEN_WIDTH-100, 10);
+                        setCursor(SCREEN_WIDTH - 100, 10);
                         setTextColor2(WHITE, RED);
                         setTextSize(2);
                         writeString("BAD!!!!!!!!");
@@ -1588,7 +1627,7 @@ void key_released_callback_game(int key)
         // Draw the key pressed on the screen
         draw_piano(key, 0); // draw the piano keys on the screen
         // printf("Key released: %d\n", key); // Print the key released for debugging
-        
+
         // Check if there are any notes in the lane
         if (activeNotesInLane[key] > 0)
         {
@@ -1688,10 +1727,10 @@ int main()
     );
 
     // Setup the data channel
-    c2 = dma_channel_get_default_config(data_chan); // Default configs
-    channel_config_set_transfer_data_size(&c2, DMA_SIZE_16);           // 16-bit txfers
-    channel_config_set_read_increment(&c2, true);                      // yes read incrementing
-    channel_config_set_write_increment(&c2, false);                    // no write incrementing
+    c2 = dma_channel_get_default_config(data_chan);          // Default configs
+    channel_config_set_transfer_data_size(&c2, DMA_SIZE_16); // 16-bit txfers
+    channel_config_set_read_increment(&c2, true);            // yes read incrementing
+    channel_config_set_write_increment(&c2, false);          // no write incrementing
     // (X/Y)*sys_clk, where X is the first 16 bytes and Y is the second
     // sys_clk is 125 MHz unless changed in code. Configured to ~22 kHz
     dma_timer_set_fraction(0, 0x000B, 0xffff);
@@ -1730,8 +1769,6 @@ int main()
     gpio_pull_down((BASE_KEYPAD_PIN + 4));
     gpio_pull_down((BASE_KEYPAD_PIN + 5));
     gpio_pull_down((BASE_KEYPAD_PIN + 6));
-
-
 
     // while(1){
     // play_c();
