@@ -69,6 +69,7 @@
 #include "ASharp.h"
 #include "B.h"
 #include "HighC.h"
+#include "HighD.h"
 #include "amplitude_envelope_mario.h"
 
 // === the fixed point macros ========================================
@@ -184,6 +185,30 @@ void play_c()
         &spi_get_hw(SPI_PORT)->dr, // write address (SPI data register)
         DAC_data_c,                  // The initial read address
         28224,                       // Number of transfers
+        false                      // Don't start immediately.
+    );
+
+    if (!(dma_channel_is_busy(data_chan) || dma_channel_is_busy(ctrl_chan)))
+    {
+        dma_start_channel_mask(1u << data_chan);
+    }
+}
+
+
+void play_HighD()
+{
+    dma_channel_abort(data_chan); // abort the current transfer
+    dma_channel_abort(ctrl_chan); // abort the current transfer
+
+    // stop ping ponging
+    channel_config_set_chain_to(&c2, data_chan); // Chain to control channel COMMENT OUT TO PREVENT LOOPING
+    // reconfigure Dma channel to play mario instead
+    dma_channel_configure(
+        data_chan,                 // Channel to be configured
+        &c2,                       // The configuration we just created
+        &spi_get_hw(SPI_PORT)->dr, // write address (SPI data register)
+        DAC_data_HighD,                  // The initial read address
+        23991,                       // Number of transfers
         false                      // Don't start immediately.
     );
 
@@ -512,11 +537,11 @@ void draw_menu()
     setTextColor2(WHITE, BLACK);
     setTextSize(2);
     setCursor(100, 320);
-    writeString("Play Endless");
+    writeString("Play Great Fairy Fountain");
     setCursor(100, 360);
-    writeString("Play Song with Lives");
+    writeString("Play Great Fairy Fountain with Lives");
     setCursor(100, 400);
-    writeString("Play Song with all 12 lanes");
+    writeString("Play Twinkle Twinkle Little Star");
     setCursor(100, 440);
     writeString("Credits");
 }
@@ -834,8 +859,12 @@ void draw_end_screen()
 
     setCursor(50, 220);
     writeString("Your accuracy was: ");
-    setCursor(250, 220);
-    sprintf(notesTextBuffer, "%f:2", numNotesHit/(numNotesHit + numNotesMissed));
+    setCursor(270, 220);
+    if (numNotesHit + numNotesMissed > 0) {
+        sprintf(notesTextBuffer, "%.2f", (float)numNotesHit / (numNotesHit + numNotesMissed));
+    } else {
+        sprintf(notesTextBuffer, "N/A"); // Handle the case where no notes are hit or missed
+    }
     writeString(notesTextBuffer);
 
     setCursor(50, 260);
@@ -925,14 +954,6 @@ void update_notes()
                 continue;         // skip the rest of the loop
             }
 
-            if (twinkle_note >= songLength+5)
-            {
-                menu_state = 3; // go back to the main menu
-                draw_end_screen(); // draw the end screen on the screen
-                setup = false; // reset the setup flag
-                return;
-            }
-
             // If the note has been hit, make it smaller
             if (notes[i][j].hit)
             {
@@ -946,6 +967,7 @@ void update_notes()
     }
 }
 
+const unsigned int great_ff[35] = {11, 9, 8, 9, 9, 7, 6, 7, 7, 6, 5, 6, 6, 4, 3, 4, 11, 9, 8, 12, 11, 10, 11, 15, 12, 11, 12, 11, 9, 7, 6, 13, 13};
 
 // const unsigned int twinkle_twinkle[96] = {0, 13, 0, 13, 7, 13, 7, 13, 9, 13, 9, 13, 7, 7, 7, 13, 5, 13, 5, 13, 4, 13, 4, 13, 2, 13, 2, 13, 0, 0, 0, 13, 7, 13, 7, 13, 5, 13, 5, 13, 4, 13, 4, 13, 2, 2, 2, 13,
 //                                             7, 13, 7, 13, 5, 13, 5, 13, 4, 13, 4, 13, 2, 2, 2, 13, 0, 13, 0, 13, 7, 13, 7, 13, 9, 13, 9, 13, 7, 7, 7, 13, 5, 13, 5, 13, 4, 13, 4, 13, 2, 13, 2, 13, 0, 0, 0, 13};
@@ -975,19 +997,23 @@ static PT_THREAD(protothread_twinkle_notes(struct pt *pt))
         int color = rand() % 16;      // Random color
         // int height = rand() % (maxHeight); // Random height
         int sustain = 0; // Random sustain (0 or 1)
-        if (twinkle_note == 0 || twinkle_note == 6 || twinkle_note == 20 || twinkle_note == 27 || twinkle_note == 34 || twinkle_note == 41) // if the note is a long note
-        {
-            sustain = 1; // make it a long note
-        }
+        // if (twinkle_note == 0 || twinkle_note == 6 || twinkle_note == 20 || twinkle_note == 27 || twinkle_note == 34 || twinkle_note == 41) // if the note is a long note
+        // {
+        //     sustain = 1; // make it a long note
+        // }
         int height = hitWidth;    // Fixed height for now
         if (sustain)
         {
             color = YELLOW;
             height = 2 * hitWidth;
         }
-        spawn_note(lane, color, height, sustain);
+        if (twinkle_note == 23){
+            play_HighD();
         }
-        twinkle_note++;
+        else {
+            spawn_note(lane, color, height, sustain);
+        }
+        }
 
         // draw twinkle note number on the screen
         setCursor(10, 70);
@@ -996,6 +1022,16 @@ static PT_THREAD(protothread_twinkle_notes(struct pt *pt))
         char notesTextBuffer[4];
         sprintf(notesTextBuffer, "%d", twinkle_note);
         writeString(notesTextBuffer);
+
+        twinkle_note++;
+
+        if (twinkle_note >= songLength+5)
+        {
+            menu_state = 3; // go back to the main menu
+            draw_end_screen(); // draw the end screen on the screen
+            setup = false; // reset the setup flag
+        }
+
 
         PT_YIELD_usec(800000); // Yield for 100ms
     }
@@ -1327,7 +1363,7 @@ void key_released_callback(int key)
                 menu_state = 1; // Start the game
                 numLanes = 13;
                 twinkle_twinkle = twinkle_twinkle2; // Set the song to play
-                songLength = 90; // Set the song length
+                songLength = 35; // Set the song length
                 draw_background(); // Draw the background for the game
                 draw_hitLine();    // Draw the hit line for the game
                 setup = false; // reset the setup flag
@@ -1338,7 +1374,7 @@ void key_released_callback(int key)
                 lives = 3;
                 numLanes = 13;
                 twinkle_twinkle = twinkle_twinkle2; // Set the song to play
-                songLength = 90; // Set the song length
+                songLength = 35; // Set the song length
                 draw_background(); // Draw the background for the game
                 draw_hitLine();    // Draw the hit line for the game
                 setup = false; // reset the setup flag
