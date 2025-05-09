@@ -585,7 +585,6 @@ volatile int numNotesMissed = 0;                                     // number o
 const bool pianoKeyTypes[13] = {1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1}; // 1 is a white key 0 is black -- used for drawing the piano keys on the screen
 bool pianoKeysPressed[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 bool setup = false; // flag to check if the setup has been done
-int songLength = 96;
 
 void draw_piano(int lane, bool outline);
 
@@ -846,6 +845,9 @@ void draw_end_screen()
     writeString(notesTextBuffer);
 }
 
+int songLength = 45;
+static int twinkle_note = 0;
+
 /**
  * @brief Updates the falling notes
  * Currently just moves them down the screen and deletes them once we hit the bottom
@@ -889,19 +891,29 @@ void update_notes()
                         menu_state = 3; // go back to the main menu
                         draw_end_screen(); // draw the end screen on the screen
                         setup = false; // reset the setup flag
+                        // clear notes
+                        for (int i = 0; i < numLanes; i++)
+                        {
+                            activeNotesInLane[i] = 0; // clear the notes in the lane
+                        }
+                        // reinitialize the notes
+                        for (int i = 0; i < numLanes; i++)
+                        {
+                            for (int j = 0; j < 50; j++)
+                            {
+                                notes[i][j].hit = false; // reset the hit status of the note
+                                notes[i][j].sustain = false; // reset the sustain status of the note
+                                notes[i][j].height = 0; // reset the height of the note
+                                notes[i][j].y = 0; // reset the y position of the note
+                                notes[i][j].lane = 0; // reset the lane of the note
+                                notes[i][j].color = 0; // reset the color of the note
+                            }
+                        }
                         // stop dma channel
                         dma_channel_abort(data_chan); // abort the channel
                         dma_channel_abort(ctrl_chan); // abort the channel
                         return;         // return to the main menu
                     }
-                }
-
-                if (numNotesMissed + numNotesHit > songLength)
-                {
-                    menu_state = 3; // go back to the main menu
-                    draw_end_screen(); // draw the end screen on the screen
-                    setup = false; // reset the setup flag
-                    return;
                 }
 
                 // write miss on the screen
@@ -911,6 +923,14 @@ void update_notes()
                 writeString("MISS!!!!");
 
                 continue;         // skip the rest of the loop
+            }
+
+            if (twinkle_note >= songLength+5)
+            {
+                menu_state = 3; // go back to the main menu
+                draw_end_screen(); // draw the end screen on the screen
+                setup = false; // reset the setup flag
+                return;
             }
 
             // If the note has been hit, make it smaller
@@ -929,11 +949,13 @@ void update_notes()
 
 // const unsigned int twinkle_twinkle[96] = {0, 13, 0, 13, 7, 13, 7, 13, 9, 13, 9, 13, 7, 7, 7, 13, 5, 13, 5, 13, 4, 13, 4, 13, 2, 13, 2, 13, 0, 0, 0, 13, 7, 13, 7, 13, 5, 13, 5, 13, 4, 13, 4, 13, 2, 2, 2, 13,
 //                                             7, 13, 7, 13, 5, 13, 5, 13, 4, 13, 4, 13, 2, 2, 2, 13, 0, 13, 0, 13, 7, 13, 7, 13, 9, 13, 9, 13, 7, 7, 7, 13, 5, 13, 5, 13, 4, 13, 4, 13, 2, 13, 2, 13, 0, 0, 0, 13};
-const unsigned int twinkle_twinkle[45] = {0, 0, 7, 7, 9, 9, 7, 5, 5, 4, 4, 2, 2, 0, 7, 7, 5, 5, 4, 4, 2,
-                                            7, 7, 5, 5, 4, 4, 2, 0, 0, 7, 7, 9, 9, 7, 5, 5, 4, 4, 2, 2, 0, 13, 13, 13};   
+const unsigned int twinkle_twinkle1[45] = {0, 0, 7, 7, 9, 9, 7, 5, 5, 4, 4, 2, 2, 0, 7, 7, 5, 5, 4, 4, 2,
+                                            7, 7, 5, 5, 4, 4, 2, 0, 0, 7, 7, 9, 9, 7, 5, 5, 4, 4, 2, 2, 0, 13, 13, 13};  
+                                            
+const unsigned int twinkle_twinkle2[35] = {11, 9, 8, 9, 9, 7, 6, 7, 7, 6, 5, 6, 6, 4, 3, 4, 11, 9, 8, 12, 11, 10, 11, 15, 12, 11, 12, 11, 9, 7, 6, 13, 13};
     
     //6, 13, 20, 27, 34, 41
-static int twinkle_note = 0;
+const unsigned int *twinkle_twinkle;
 
 static PT_THREAD(protothread_twinkle_notes(struct pt *pt))
 {
@@ -941,11 +963,14 @@ static PT_THREAD(protothread_twinkle_notes(struct pt *pt))
     const int maxHeight = SCREEN_HEIGHT / 4; // max height of the note
     while (1)
     {
-        while (menu_state != 1)
+        while (menu_state != 1 || twinkle_note == -1)
         {
             PT_YIELD_usec(100000); // Yield for 100ms
         }
-        // Spawn notes every 100ms
+
+        if (twinkle_note < songLength) // reset the note index
+        {
+                    // Spawn notes every 100ms
         int lane = twinkle_twinkle[twinkle_note]; // Random lane
         int color = rand() % 16;      // Random color
         // int height = rand() % (maxHeight); // Random height
@@ -960,8 +985,18 @@ static PT_THREAD(protothread_twinkle_notes(struct pt *pt))
             color = YELLOW;
             height = 2 * hitWidth;
         }
-        twinkle_note++;
         spawn_note(lane, color, height, sustain);
+        }
+        twinkle_note++;
+
+        // draw twinkle note number on the screen
+        setCursor(10, 70);
+        setTextColor2(WHITE, BLACK);
+        setTextSize(2);
+        char notesTextBuffer[4];
+        sprintf(notesTextBuffer, "%d", twinkle_note);
+        writeString(notesTextBuffer);
+
         PT_YIELD_usec(800000); // Yield for 100ms
     }
 
@@ -1033,11 +1068,6 @@ static PT_THREAD(protothread_animation_loop(struct pt *pt))
             setup=true;
             // pt_add_thread(protothread_spawn_notes);
             pt_add_thread(protothread_twinkle_notes);
-            twinkle_note++;
-            if (twinkle_note >= 45) // reset the note index
-            {
-                twinkle_note = 0;
-            }
             drawPicture(0, 0, (unsigned short *)vga_image, 640, 480); // Draw the picture on the screen
             draw_background();
             // Spawn notes
@@ -1295,7 +1325,9 @@ void key_released_callback(int key)
             if (menu_selection == 0)
             {
                 menu_state = 1; // Start the game
-                numLanes = 4;
+                numLanes = 13;
+                twinkle_twinkle = twinkle_twinkle2; // Set the song to play
+                songLength = 90; // Set the song length
                 draw_background(); // Draw the background for the game
                 draw_hitLine();    // Draw the hit line for the game
                 setup = false; // reset the setup flag
@@ -1304,13 +1336,17 @@ void key_released_callback(int key)
             {
                 menu_state = 1; // Start the game with lives
                 lives = 3;
-                numLanes = 4;
+                numLanes = 13;
+                twinkle_twinkle = twinkle_twinkle2; // Set the song to play
+                songLength = 90; // Set the song length
                 draw_background(); // Draw the background for the game
                 draw_hitLine();    // Draw the hit line for the game
                 setup = false; // reset the setup flag
             }
             else if (menu_selection == 2)
             {
+                twinkle_twinkle = twinkle_twinkle1; // Set the song to play
+                songLength = 45; // Set the song length
                 menu_state = 1; // Start the game with 12 lanes
                 numLanes = 13; // Set the number of lanes to 12
                 draw_background(); // Draw the background for the game
