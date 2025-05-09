@@ -263,9 +263,9 @@ typedef struct note
     // Maybe add start time and
 } note;
 
-#define numLanes 4                                                 // number of lanes
-volatile note notes[numLanes][50];                                   // 3 lanes of notes, 50 is the max number of notes in each lane at a single time (arbitary large number)
-volatile int activeNotesInLane[numLanes];                            // number of notes in each lane
+int numLanes = 4;                                                 // number of lanes
+volatile note notes[13][50];                                   // 3 lanes of notes, 50 is the max number of notes in each lane at a single time (arbitary large number)
+volatile int activeNotesInLane[13];                            // number of notes in each lane
 const int gravity = 10;                                              // The speed at which the notes fall -- can be changed to make it harder or easier
 const int noteSkinniness = 2;                                        // offset for the notes to make them look better and be in the center of the lane
 volatile int numNotesHit = 0;                                        // number of notes hit
@@ -882,6 +882,7 @@ void key_released_callback(int key)
             if (menu_selection == 0)
             {
                 menu_state = 1; // Start the game
+                numLanes = 4;
                 draw_background(); // Draw the background for the game
                 draw_hitLine();    // Draw the hit line for the game
                 setup = false; // reset the setup flag
@@ -890,6 +891,7 @@ void key_released_callback(int key)
             {
                 menu_state = 1; // Start the game with lives
                 lives = 3;
+                numLanes = 4;
                 draw_background(); // Draw the background for the game
                 draw_hitLine();    // Draw the hit line for the game
                 setup = false; // reset the setup flag
@@ -897,6 +899,7 @@ void key_released_callback(int key)
             else if (menu_selection == 2)
             {
                 menu_state = 1; // Start the game with 12 lanes
+                numLanes = 13; // Set the number of lanes to 12
                 draw_background(); // Draw the background for the game
                 draw_hitLine();    // Draw the hit line for the game
                 setup = false; // reset the setup flag
@@ -1147,7 +1150,6 @@ int main()
 
     // Add core 0 threads
     pt_add_thread(protothread_animation_loop);
-    // pt_add_thread(protothread_menu_screen);
     pt_add_thread(protothread_blinky);
     pt_add_thread(protothread_keypad_scan);
     pt_add_thread(protothread_piano_scan);
