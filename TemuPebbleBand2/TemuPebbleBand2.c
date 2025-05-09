@@ -987,9 +987,11 @@ static PT_THREAD(protothread_twinkle_notes(struct pt *pt))
             color = YELLOW;
             height = 2 * hitWidth;
         }
-        spawn_note(lane, color, height, sustain);
         if (twinkle_note == 23){
             play_HighD();
+        }
+        else {
+            spawn_note(lane, color, height, sustain);
         }
         twinkle_note++;
         PT_YIELD_usec(800000); // Yield for 100ms
