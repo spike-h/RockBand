@@ -499,7 +499,7 @@ void play_mario_death()
 static PT_THREAD(protothread_animation_loop(struct pt *pt));
 
 // Menu state variables
-int menu_state = 0; // 0 = main menu, 1 = game, 2 = credits
+int menu_state = 0; // 0 = main menu, 1 = game, 2 = credits, 3 = game over
 int menu_selection = 0; // 0 = play endless, 1 = play song with lives, 2 = play song with no lives, 3 = credits
 int current_menu_selection = 0; // current menu selection
 int lives = -1;
@@ -585,6 +585,7 @@ volatile int numNotesMissed = 0;                                     // number o
 const bool pianoKeyTypes[13] = {1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1}; // 1 is a white key 0 is black -- used for drawing the piano keys on the screen
 bool pianoKeysPressed[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 bool setup = false; // flag to check if the setup has been done
+int songLength = 96;
 
 void draw_piano(int lane, bool outline);
 
@@ -809,6 +810,42 @@ bool check_hit(note noteObj)
     return ((noteObj.y + noteObj.height) > (SCREEN_HEIGHT - hitHeight)) && ((noteObj.y + noteObj.height) < (SCREEN_HEIGHT - hitHeight + hitWidth));
 }
 
+void draw_end_screen()
+{
+    // Draw the end screen on the screen
+    fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, BLACK); // clear the screen
+    setTextColor2(WHITE, BLACK);
+    setTextSize(4);
+    setCursor(100, 100);
+    writeString("Game Over");
+    setTextSize(2);
+    char notesTextBuffer[4];
+
+    setCursor(50, 140);
+    writeString("You hit: ");
+    setCursor(100, 140);
+    sprintf(notesTextBuffer, "%d", numNotesHit);
+    writeString(notesTextBuffer);
+
+    setCursor(50, 180);
+    writeString("You missed: ");
+    setCursor(150, 180);
+    sprintf(notesTextBuffer, "%d", numNotesMissed);
+    writeString(notesTextBuffer);
+
+    setCursor(50, 220);
+    writeString("Your accuracy was: ");
+    setCursor(200, 220);
+    sprintf(notesTextBuffer, "%f:2", numNotesHit/(numNotesHit + numNotesMissed));
+    writeString(notesTextBuffer);
+
+    setCursor(50, 260);
+    writeString("Your max combo was: ");
+    setCursor(220, 260);
+    sprintf(notesTextBuffer, "%d", maxCombo);
+    writeString(notesTextBuffer);
+}
+
 /**
  * @brief Updates the falling notes
  * Currently just moves them down the screen and deletes them once we hit the bottom
@@ -849,7 +886,8 @@ void update_notes()
                     if (lives == 0)
                     {
                         play_mario_death(); // play the death sound
-                        menu_state = 0; // go back to the main menu
+                        menu_state = 3; // go back to the main menu
+                        draw_end_screen(); // draw the end screen on the screen
                         setup = false; // reset the setup flag
                         // stop dma channel
                         dma_channel_abort(data_chan); // abort the channel
@@ -858,11 +896,19 @@ void update_notes()
                     }
                 }
 
-                // write perfect on the screen
+                if (numNotesMissed + numNotesHit > songLength)
+                {
+                    menu_state = 3; // go back to the main menu
+                    draw_end_screen(); // draw the end screen on the screen
+                    setup = false; // reset the setup flag
+                    return;
+                }
+
+                // write miss on the screen
                 setCursor(SCREEN_WIDTH-100, 10);
-                setTextColor2(WHITE, BLACK);
+                setTextColor2(WHITE, RED);
                 setTextSize(2);
-                writeString("MISS!!!");
+                writeString("MISS!!!!");
 
                 continue;         // skip the rest of the loop
             }
@@ -870,7 +916,6 @@ void update_notes()
             // If the note has been hit, make it smaller
             if (notes[i][j].hit)
             {
-                numNotesHit++;                                         // increment the number of notes hit
                 notes[i][j].height -= gravity;                         // make the note smaller
                 if (notes[i][j].height <= 0 || (!notes[i][j].sustain)) // if the note is gone, remove it from the lane
                 {
@@ -975,6 +1020,13 @@ static PT_THREAD(protothread_animation_loop(struct pt *pt))
             draw_credits(); // Draw the credits on the screen
         }
     }
+    else if (menu_state == 3)
+    {
+        if (!setup) {
+            setup=true;
+            draw_end_screen(); // Draw the credits on the screen
+        }
+    }
     else if (menu_state == 1)
     {
         if (!setup) {
@@ -1005,6 +1057,8 @@ static PT_THREAD(protothread_animation_loop(struct pt *pt))
             update_notes();
             draw_notes(0);
             draw_hitLine();
+
+            setTextColor2(WHITE, BLACK);
 
             char notesTextBuffer[4];
             setCursor(130, 10);
@@ -1271,7 +1325,7 @@ void key_released_callback(int key)
             }
         }
     }
-    else if (menu_state == 2) // if we are in the credits
+    else if (menu_state == 2 || menu_state == 3) // if we are in the credits
     {
         menu_state = 0; // Go back to the main menu
         draw_menu();    // Draw the main menu
@@ -1358,6 +1412,7 @@ void key_pressed_callback_game(int key)
                 if (check_hit(noteKey))
                 {
                     notes[key][i].hit = true; // mark the note as hit
+                    numNotesHit++;                                         // increment the number of notes hit
                     //play_sound();             // play sound
                     // if (key == 0) {
                     //     play_c();
@@ -1403,7 +1458,7 @@ void key_pressed_callback_game(int key)
                     {
                         // write perfect on the screen
                         setCursor(SCREEN_WIDTH-100, 10);
-                        setTextColor2(WHITE, BLACK);
+                        setTextColor2(WHITE, GREEN);
                         setTextSize(2);
                         writeString("PERFECT!");
                     }
@@ -1411,7 +1466,7 @@ void key_pressed_callback_game(int key)
                     {
                         // write GOOD on the screen
                         setCursor(SCREEN_WIDTH-100, 10);
-                        setTextColor2(WHITE, BLACK);
+                        setTextColor2(WHITE, GREEN);
                         setTextSize(2);
                         writeString("GOOD!");
                     }
@@ -1419,7 +1474,7 @@ void key_pressed_callback_game(int key)
                     {
                         // write GOOD on the screen
                         setCursor(SCREEN_WIDTH-100, 10);
-                        setTextColor2(WHITE, BLACK);
+                        setTextColor2(WHITE, RED);
                         setTextSize(2);
                         writeString("BAD!");
                     }
