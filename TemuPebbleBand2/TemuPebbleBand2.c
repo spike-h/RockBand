@@ -528,23 +528,8 @@ int menu_state = 0; // 0 = main menu, 1 = game, 2 = credits, 3 = game over
 int menu_selection = 0; // 0 = play endless, 1 = play song with lives, 2 = play song with no lives, 3 = credits
 int current_menu_selection = 0; // current menu selection
 int lives = -1;
-
-// draw the main menu
-void draw_menu()
-{
-    // fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, BLACK); // clear the screen
-    drawPicture(0, 0, (unsigned short *)vga_arnav_image, 640, 480); // Draw the picture on the screen
-    setTextColor2(WHITE, BLACK);
-    setTextSize(2);
-    setCursor(100, 320);
-    writeString("Play Great Fairy Fountain");
-    setCursor(100, 360);
-    writeString("Play Great Fairy Fountain with Lives");
-    setCursor(100, 400);
-    writeString("Play Twinkle Twinkle Little Star");
-    setCursor(100, 440);
-    writeString("Credits");
-}
+int numLanes = 13;    
+void draw_piano(int lane, bool outline); // forward declaration of draw_piano function
 
 // draw cursor on the menu given the current menu selection
 void draw_cursor(int erase)
@@ -599,10 +584,8 @@ typedef struct note
     bool sustain; // if the note is a sustained note or not
     // Maybe add start time and
 } note;
+                                             // number of lanes
 
-int numLanes = 13;                                                 // number of lanes
-volatile note notes[13][50];                                   // 3 lanes of notes, 50 is the max number of notes in each lane at a single time (arbitary large number)
-volatile int activeNotesInLane[13];                            // number of notes in each lane
 const int gravity = 5;                                              // The speed at which the notes fall -- can be changed to make it harder or easier
 const int noteSkinniness = 2;                                        // offset for the notes to make them look better and be in the center of the lane
 volatile int numNotesHit = 0;                                        // number of notes hit
@@ -610,6 +593,28 @@ volatile int numNotesMissed = 0;                                     // number o
 const bool pianoKeyTypes[13] = {1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1}; // 1 is a white key 0 is black -- used for drawing the piano keys on the screen
 bool pianoKeysPressed[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 bool setup = false; // flag to check if the setup has been done
+
+volatile note notes[13][50];                                   // 3 lanes of notes, 50 is the max number of notes in each lane at a single time (arbitary large number)
+volatile int activeNotesInLane[13];                            // number of notes in each lane
+
+
+// draw the main menu
+void draw_menu()
+{
+    // fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, BLACK); // clear the screen
+    drawPicture(0, 0, (unsigned short *)vga_arnav_image, 640, 480); // Draw the picture on the screen
+    setTextColor2(WHITE, BLACK);
+    setTextSize(2);
+    setCursor(100, 320);
+    writeString("Play Great Fairy Fountain");
+    setCursor(100, 360);
+    writeString("Play Great Fairy Fountain with Lives");
+    setCursor(100, 400);
+    writeString("Play Twinkle Twinkle Little Star");
+    setCursor(100, 440);
+    writeString("Credits");
+}
+
 
 void draw_piano(int lane, bool outline);
 
@@ -765,6 +770,7 @@ void spawn_note(int lane, int color, int height, int sustain)
         notes[lane][activeNotesInLane[lane]].sustain = sustain; // not a sustained note (long press note)
         activeNotesInLane[lane]++;
         draw_piano(lane, 1); // draw the key on the screen
+        // printf("Spawned note in lane %d at y = %f, height = %d, color = %d\n", lane, notes[lane][activeNotesInLane[lane]].y, notes[lane][activeNotesInLane[lane]].height, notes[lane][activeNotesInLane[lane]].color); // print the note position for debugging
     }
 }
 
@@ -799,7 +805,7 @@ void draw_notes(int erase)
                 // fillRect(SCREEN_WIDTH/2 - trackWidth/2 + (i*singleTrackWidth), notes[i][j].y, singleTrackWidth-5, notes[i][j].height, notes[i][j].color); // draw the whole note
                 fillRect(SCREEN_WIDTH / 2 - trackWidth / 2 + (i * trackWidth / numLanes) + noteSkinniness, notes[i][j].y + max(notes[i][j].height - gravity, 0), trackWidth / numLanes - noteSkinniness, gravity, notes[i][j].color); // draw the bottom of the note that moved down
                 // }
-                printf("Note %d in lane %d at y = %f, height = %d, hit_satus = %d\n", j, i, notes[i][j].y, notes[i][j].height, notes[i][j].hit); // print the note position for debugging
+                // printf("Note %d in lane %d at y = %f, height = %d, hit_satus = %d\n", j, i, notes[i][j].y, notes[i][j].height, notes[i][j].hit); // print the note position for debugging
             }
         }
     }
@@ -921,23 +927,24 @@ void update_notes()
                         draw_end_screen(); // draw the end screen on the screen
                         setup = false; // reset the setup flag
                         // clear notes
-                        for (int i = 0; i < numLanes; i++)
+                        for (int i = 0; i < 13; i++)
                         {
                             activeNotesInLane[i] = 0; // clear the notes in the lane
                         }
                         // reinitialize the notes
-                        for (int i = 0; i < numLanes; i++)
+                        for (int i = 0; i < 13; i++)
                         {
                             for (int j = 0; j < 50; j++)
                             {
                                 notes[i][j].hit = false; // reset the hit status of the note
                                 notes[i][j].sustain = false; // reset the sustain status of the note
-                                notes[i][j].height = 0; // reset the height of the note
+                                notes[i][j].height = SCREEN_HEIGHT; // reset the height of the note
                                 notes[i][j].y = 0; // reset the y position of the note
                                 notes[i][j].lane = 0; // reset the lane of the note
                                 notes[i][j].color = 0; // reset the color of the note
                             }
                         }
+                        
                         // stop dma channel
                         dma_channel_abort(data_chan); // abort the channel
                         dma_channel_abort(ctrl_chan); // abort the channel
@@ -992,36 +999,37 @@ static PT_THREAD(protothread_twinkle_notes(struct pt *pt))
 
         if (twinkle_note < songLength) // reset the note index
         {
-                    // Spawn notes every 100ms
-        int lane = twinkle_twinkle[twinkle_note]; // Random lane
-        int color = rand() % 16;      // Random color
-        // int height = rand() % (maxHeight); // Random height
-        int sustain = 0; // Random sustain (0 or 1)
-        // if (twinkle_note == 0 || twinkle_note == 6 || twinkle_note == 20 || twinkle_note == 27 || twinkle_note == 34 || twinkle_note == 41) // if the note is a long note
-        // {
-        //     sustain = 1; // make it a long note
-        // }
-        int height = hitWidth;    // Fixed height for now
-        if (sustain)
-        {
-            color = YELLOW;
-            height = 2 * hitWidth;
-        }
-        if (twinkle_note == 23){
-            play_HighD();
-        }
-        else {
-            spawn_note(lane, color, height, sustain);
-        }
+                        // Spawn notes every 100ms
+            int lane = twinkle_twinkle[twinkle_note]; // Random lane
+            int color = rand() % 16;      // Random color
+            // int height = rand() % (maxHeight); // Random height
+            int sustain = 0; // Random sustain (0 or 1)
+            if (songLength == 45 && (twinkle_note == 0 || twinkle_note == 6 || twinkle_note == 20 || twinkle_note == 27 || twinkle_note == 34 || twinkle_note == 41)) // if the note is a long note
+            {
+                sustain = 1; // make it a long note
+            }
+            int height = hitWidth;    // Fixed height for now
+            if (sustain)
+            {
+                color = YELLOW;
+                height = 2 * hitWidth;
+            }
+
+            if ((songLength == 35) && (twinkle_note == 23)){
+                play_HighD();
+            }
+            else {
+                spawn_note(lane, color, height, sustain);
+            }
         }
 
         // draw twinkle note number on the screen
-        setCursor(10, 70);
-        setTextColor2(WHITE, BLACK);
-        setTextSize(2);
-        char notesTextBuffer[4];
-        sprintf(notesTextBuffer, "%d", twinkle_note);
-        writeString(notesTextBuffer);
+        // setCursor(10, 70);
+        // setTextColor2(WHITE, BLACK);
+        // setTextSize(2);
+        // char notesTextBuffer[4];
+        // sprintf(notesTextBuffer, "%d", twinkle_note);
+        // writeString(notesTextBuffer);
 
         twinkle_note++;
 
@@ -1041,33 +1049,6 @@ static PT_THREAD(protothread_twinkle_notes(struct pt *pt))
 // ========================================
 // ============ Spawning thread ==========
 // ========================================
-static PT_THREAD(protothread_spawn_notes(struct pt *pt))
-{
-    PT_BEGIN(pt);
-    const int maxHeight = SCREEN_HEIGHT / 4; // max height of the note
-    while (1)
-    {
-        while (menu_state != 1)
-        {
-            PT_YIELD_usec(100000); // Yield for 100ms
-        }
-        // Spawn notes every 100ms
-        int lane = rand() % (numLanes + 1); // Random lane
-        int color = rand() % 16;      // Random color
-        // int height = rand() % (maxHeight); // Random height
-        int sustain = rand() % 2; // Random sustain (0 or 1)
-        int height = hitWidth;    // Fixed height for now
-        if (sustain)
-        {
-            color = YELLOW;
-            height = 2 * hitWidth;
-        }
-        spawn_note(lane, color, height, sustain);
-        PT_YIELD_usec(2000000); // Yield for 100ms
-    }
-
-    PT_END(pt);
-}
 
 // ========================================
 // ============ ANIMATION LOOP ============
@@ -1096,20 +1077,40 @@ static PT_THREAD(protothread_animation_loop(struct pt *pt))
         if (!setup) {
             setup=true;
             draw_end_screen(); // Draw the credits on the screen
+            
+            twinkle_note = 0; // reset the note index
+            numNotesHit = 0; // reset the number of notes hit
+            numNotesMissed = 0; // reset the number of notes missed
+            combo = 0; // reset the combo counter
+            maxCombo = 0; // reset the max combo counter
+            // reset the lives
+            lives = -1; // reset the lives
+
+            for (int i = 0; i < 13; i++)
+            {
+                activeNotesInLane[i] = 0; // clear the notes in the lane
+            }
+            // reinitialize the notes
+            for (int i = 0; i < 13; i++)
+            {
+                for (int j = 0; j < 50; j++)
+                {
+                    notes[i][j].hit = false; // reset the hit status of the note
+                    notes[i][j].sustain = false; // reset the sustain status of the note
+                    notes[i][j].height = SCREEN_HEIGHT; // reset the height of the note
+                    notes[i][j].y = 0; // reset the y position of the note
+                    notes[i][j].lane = 0; // reset the lane of the note
+                    notes[i][j].color = 0; // reset the color of the note
+                }
+            }
         }
     }
     else if (menu_state == 1)
     {
         if (!setup) {
             setup=true;
-            // pt_add_thread(protothread_spawn_notes);
-            pt_add_thread(protothread_twinkle_notes);
             drawPicture(0, 0, (unsigned short *)vga_image, 640, 480); // Draw the picture on the screen
             draw_background();
-            // Spawn notes
-            // spawn_note(0, RED, 50);
-            // spawn_note(1, GREEN, 50);
-            // spawn_note(2, BLUE, 50);
 
             if (lives != -1) // if we are playing a song with lives
             {
@@ -1323,8 +1324,6 @@ static PT_THREAD(protothread_piano_scan(struct pt *pt))
             prev_keys[i] = curr_keys[i]; // Copy the current keys to the previous keys for the next iteration
         }
 
-        printf("Key pressed: %d %d %d %d %d %d %d %d %d %d %d %d %d\n", prev_keys[0], prev_keys[1], prev_keys[2], prev_keys[3], prev_keys[4], prev_keys[5], prev_keys[6], prev_keys[8], prev_keys[9], prev_keys[10], prev_keys[11], prev_keys[12]); // Print the key pressed for debugging
-
         PT_YIELD_usec(30000);
     }
     // End the protothread
@@ -1344,6 +1343,25 @@ void key_released_callback(int key)
     }
     else if (menu_state == 0) // if we are in the menu
     {
+
+        for (int i = 0; i < 13; i++)
+        {
+            activeNotesInLane[i] = 0; // clear the notes in the lane
+        }
+        // reinitialize the notes
+        for (int i = 0; i < 13; i++)
+        {
+            for (int j = 0; j < 50; j++)
+            {
+                notes[i][j].hit = false; // reset the hit status of the note
+                notes[i][j].sustain = false; // reset the sustain status of the note
+                notes[i][j].height = SCREEN_HEIGHT; // reset the height of the note
+                notes[i][j].y = 0; // reset the y position of the note
+                notes[i][j].lane = 0; // reset the lane of the note
+                notes[i][j].color = 0; // reset the color of the note
+            }
+        }
+
         if (key == 1)
         {
             draw_cursor(1); // erase the cursor on the screen
@@ -1548,7 +1566,7 @@ void key_pressed_callback_game(int key)
                         setCursor(SCREEN_WIDTH-100, 10);
                         setTextColor2(WHITE, RED);
                         setTextSize(2);
-                        writeString("BAD!");
+                        writeString("BAD!!!!!!!!");
                     }
                 }
             }
@@ -1569,7 +1587,7 @@ void key_released_callback_game(int key)
         pianoKeysPressed[key] = false;
         // Draw the key pressed on the screen
         draw_piano(key, 0); // draw the piano keys on the screen
-        printf("Key released: %d\n", key); // Print the key released for debugging
+        // printf("Key released: %d\n", key); // Print the key released for debugging
         
         // Check if there are any notes in the lane
         if (activeNotesInLane[key] > 0)
@@ -1784,7 +1802,7 @@ int main()
     pt_add_thread(protothread_blinky);
     pt_add_thread(protothread_keypad_scan);
     pt_add_thread(protothread_piano_scan);
-    // pt_add_thread(protothread_twinkle_notes);
+    pt_add_thread(protothread_twinkle_notes);
     // Start scheduling core 0 threads
     pt_schedule_start;
 }
