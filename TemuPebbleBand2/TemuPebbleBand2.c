@@ -823,25 +823,25 @@ void draw_end_screen()
 
     setCursor(50, 140);
     writeString("You hit: ");
-    setCursor(100, 140);
+    setCursor(150, 140);
     sprintf(notesTextBuffer, "%d", numNotesHit);
     writeString(notesTextBuffer);
 
     setCursor(50, 180);
     writeString("You missed: ");
-    setCursor(150, 180);
+    setCursor(200, 180);
     sprintf(notesTextBuffer, "%d", numNotesMissed);
     writeString(notesTextBuffer);
 
     setCursor(50, 220);
     writeString("Your accuracy was: ");
-    setCursor(200, 220);
+    setCursor(250, 220);
     sprintf(notesTextBuffer, "%f:2", numNotesHit/(numNotesHit + numNotesMissed));
     writeString(notesTextBuffer);
 
     setCursor(50, 260);
     writeString("Your max combo was: ");
-    setCursor(220, 260);
+    setCursor(300, 260);
     sprintf(notesTextBuffer, "%d", maxCombo);
     writeString(notesTextBuffer);
 }
@@ -1421,7 +1421,7 @@ void key_pressed_callback_game(int key)
                         setCursor(SCREEN_WIDTH-100, 10);
                         setTextColor2(WHITE, GREEN);
                         setTextSize(2);
-                        writeString("GOOD!");
+                        writeString("GOOD!!!!!");
                     }
                     else // if the note is hit poorly
                     {
