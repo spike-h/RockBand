@@ -979,6 +979,13 @@ static PT_THREAD(protothread_animation_loop(struct pt *pt))
             draw_credits(); // Draw the credits on the screen
         }
     }
+    else if (menu_state == 3)
+    {
+        if (!setup) {
+            setup=true;
+            draw_end_screen(); // Draw the credits on the screen
+        }
+    }
     else if (menu_state == 1)
     {
         if (!setup) {
@@ -1623,7 +1630,7 @@ int main()
     //     sleep_ms(1500);
     // }
 
-    
+
     // Add core 0 threads
     pt_add_thread(protothread_animation_loop);
     pt_add_thread(protothread_blinky);
