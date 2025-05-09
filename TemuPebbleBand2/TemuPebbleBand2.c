@@ -53,7 +53,7 @@
 #include "pt_cornell_rp2040_v1_3.h"
 // include picture header
 #include "gamebg.h"
-#include "menubg.h"
+#include "arnav.h"
 // include dac header
 #include "audio_download.h"
 #include "C.h"
@@ -508,7 +508,7 @@ int lives = -1;
 void draw_menu()
 {
     // fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, BLACK); // clear the screen
-    drawPicture(0, 0, (unsigned short *)vga_menu_image, 640, 480); // Draw the picture on the screen
+    drawPicture(0, 0, (unsigned short *)vga_arnav_image, 640, 480); // Draw the picture on the screen
     setTextColor2(WHITE, BLACK);
     setTextSize(2);
     setCursor(100, 320);
@@ -881,6 +881,47 @@ void update_notes()
     }
 }
 
+
+// const unsigned int twinkle_twinkle[96] = {0, 13, 0, 13, 7, 13, 7, 13, 9, 13, 9, 13, 7, 7, 7, 13, 5, 13, 5, 13, 4, 13, 4, 13, 2, 13, 2, 13, 0, 0, 0, 13, 7, 13, 7, 13, 5, 13, 5, 13, 4, 13, 4, 13, 2, 2, 2, 13,
+//                                             7, 13, 7, 13, 5, 13, 5, 13, 4, 13, 4, 13, 2, 2, 2, 13, 0, 13, 0, 13, 7, 13, 7, 13, 9, 13, 9, 13, 7, 7, 7, 13, 5, 13, 5, 13, 4, 13, 4, 13, 2, 13, 2, 13, 0, 0, 0, 13};
+const unsigned int twinkle_twinkle[45] = {0, 0, 7, 7, 9, 9, 7, 5, 5, 4, 4, 2, 2, 0, 7, 7, 5, 5, 4, 4, 2,
+                                            7, 7, 5, 5, 4, 4, 2, 0, 0, 7, 7, 9, 9, 7, 5, 5, 4, 4, 2, 2, 0, 13, 13, 13};   
+    
+    //6, 13, 20, 27, 34, 41
+static int twinkle_note = 0;
+
+static PT_THREAD(protothread_twinkle_notes(struct pt *pt))
+{
+    PT_BEGIN(pt);
+    const int maxHeight = SCREEN_HEIGHT / 4; // max height of the note
+    while (1)
+    {
+        while (menu_state != 1)
+        {
+            PT_YIELD_usec(100000); // Yield for 100ms
+        }
+        // Spawn notes every 100ms
+        int lane = twinkle_twinkle[twinkle_note]; // Random lane
+        int color = rand() % 16;      // Random color
+        // int height = rand() % (maxHeight); // Random height
+        int sustain = 0; // Random sustain (0 or 1)
+        if (twinkle_note == 0 || twinkle_note == 6 || twinkle_note == 20 || twinkle_note == 27 || twinkle_note == 34 || twinkle_note == 41) // if the note is a long note
+        {
+            sustain = 1; // make it a long note
+        }
+        int height = hitWidth;    // Fixed height for now
+        if (sustain)
+        {
+            color = YELLOW;
+            height = 2 * hitWidth;
+        }
+        twinkle_note++;
+        spawn_note(lane, color, height, sustain);
+        PT_YIELD_usec(800000); // Yield for 100ms
+    }
+
+    PT_END(pt);
+}
 // ========================================
 // ============ Spawning thread ==========
 // ========================================
@@ -895,7 +936,7 @@ static PT_THREAD(protothread_spawn_notes(struct pt *pt))
             PT_YIELD_usec(100000); // Yield for 100ms
         }
         // Spawn notes every 100ms
-        int lane = rand() % numLanes; // Random lane
+        int lane = rand() % (numLanes + 1); // Random lane
         int color = rand() % 16;      // Random color
         // int height = rand() % (maxHeight); // Random height
         int sustain = rand() % 2; // Random sustain (0 or 1)
@@ -938,7 +979,13 @@ static PT_THREAD(protothread_animation_loop(struct pt *pt))
     {
         if (!setup) {
             setup=true;
-            pt_add_thread(protothread_spawn_notes);
+            // pt_add_thread(protothread_spawn_notes);
+            pt_add_thread(protothread_twinkle_notes);
+            twinkle_note++;
+            if (twinkle_note >= 45) // reset the note index
+            {
+                twinkle_note = 0;
+            }
             drawPicture(0, 0, (unsigned short *)vga_image, 640, 480); // Draw the picture on the screen
             draw_background();
             // Spawn notes
@@ -1539,22 +1586,7 @@ int main()
     gpio_pull_down((BASE_KEYPAD_PIN + 5));
     gpio_pull_down((BASE_KEYPAD_PIN + 6));
 
-    // while(1) {
-    //     play_c();
-    //     sleep_ms(500);
-    //     play_e();
-    //     sleep_ms(500);
-    //     play_g();
-    //     sleep_ms(500);
-    //     play_c();
-    //     play_e();
-    //     sleep_ms(500);
-    //     play_c();
-    //     play_e();
-    //     play_g();
 
-    //     sleep_ms(1000);
-    // }
 
     // while(1){
     // play_c();
@@ -1585,12 +1617,47 @@ int main()
     // sleep_ms(500);
     // sleep_ms(1000);
     // }
-
+    // while(1) {
+    //     play_a();
+    //     sleep_ms(500);
+    //     play_g();
+    //     sleep_ms(500);
+    //     play_fSharp();
+    //     sleep_ms(500);
+    //     play_g();
+    //     sleep_ms(1000);
+    //     play_g();
+    //     sleep_ms(500);
+    //     play_fSharp();
+    //     sleep_ms(500);
+    //     play_e();
+    //     sleep_ms(500);
+    //     play_fSharp();
+    //     sleep_ms(1000);
+    //     play_fSharp();
+    //     sleep_ms(500);
+    //     play_e();
+    //     sleep_ms(500);
+    //     play_dSharp();
+    //     sleep_ms(500);
+    //     play_e();
+    //     sleep_ms(1000);
+    //     play_e();
+    //     sleep_ms(500);
+    //     play_d();
+    //     sleep_ms(500);
+    //     play_cSharp();
+    //     sleep_ms(500);
+    //     play_d();
+    //     sleep_ms(500);
+    //     sleep_ms(1500);
+    // }
     // Add core 0 threads
     pt_add_thread(protothread_animation_loop);
     pt_add_thread(protothread_blinky);
     pt_add_thread(protothread_keypad_scan);
     pt_add_thread(protothread_piano_scan);
+    // pt_add_thread(protothread_twinkle_notes);
     // Start scheduling core 0 threads
     pt_schedule_start;
 }
